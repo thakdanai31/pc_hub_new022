@@ -1,0 +1,37 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: pc_hub_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_USER: pc_hub_user
+      MYSQL_PASSWORD: pc_hub_pass
+      MYSQL_DATABASE: pc_hub_dev
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - app-network
+
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: phpmyadmin_interface
+    restart: always
+    environment:
+      PMA_HOST: mysql # Use the service name of the database container as the host
+      MYSQL_ROOT_PASSWORD: root_password # Use the same root password as above
+    ports:
+      - "8081:80" # Maps port 8080 on the host to port 80 in the container
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mysql_data:

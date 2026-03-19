@@ -1,0 +1,187 @@
+<div>
+  <app-page-header title="Analytics" subtitle="Store performance overview" />
+
+  @if (loading()) {
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 stagger-children">
+      @for (_ of [1, 2, 3, 4, 5]; track $index) {
+        <div class="bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5 space-y-2">
+          <div class="h-3 w-16 bg-slate-200 rounded-full shimmer"></div>
+          <div class="h-6 w-24 bg-slate-200 rounded-lg shimmer"></div>
+        </div>
+      }
+    </div>
+  } @else if (summaryError()) {
+    <app-alert-banner type="error" [message]="summaryError()">
+      <button
+        (click)="retrySummary()"
+        class="mt-2 inline-flex items-center px-3.5 py-1.5 bg-red-600 text-white rounded-lg text-xs font-semibold hover:bg-red-500 cursor-pointer"
+      >
+        Retry
+      </button>
+    </app-alert-banner>
+  } @else if (summary(); as s) {
+    <!-- Summary cards -->
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6 stagger-children">
+      <div class="relative bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5 overflow-hidden">
+        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-emerald-400"></div>
+        <div class="flex items-center justify-between mb-2">
+          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Revenue</p>
+          <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
+            <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+          </div>
+        </div>
+        <p class="text-xl font-extrabold text-emerald-700">{{ s.totalRevenue | thaiBaht }}</p>
+      </div>
+      <div class="relative bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5 overflow-hidden">
+        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-indigo-400"></div>
+        <div class="flex items-center justify-between mb-2">
+          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Orders</p>
+          <div class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center shrink-0">
+            <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007Z" /></svg>
+          </div>
+        </div>
+        <p class="text-xl font-extrabold text-slate-900">{{ s.totalOrders }}</p>
+      </div>
+      <div class="relative bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5 overflow-hidden">
+        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-amber-400"></div>
+        <div class="flex items-center justify-between mb-2">
+          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Review</p>
+          <div class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center shrink-0">
+            <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+          </div>
+        </div>
+        <p class="text-xl font-extrabold text-amber-600">{{ s.pendingReviewCount }}</p>
+      </div>
+      <div class="relative bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5 overflow-hidden">
+        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-sky-500 to-sky-400"></div>
+        <div class="flex items-center justify-between mb-2">
+          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Customers</p>
+          <div class="w-8 h-8 rounded-lg bg-sky-50 flex items-center justify-center shrink-0">
+            <svg class="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" /></svg>
+          </div>
+        </div>
+        <p class="text-xl font-extrabold text-slate-900">{{ s.totalCustomers }}</p>
+      </div>
+      <div class="relative bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5 overflow-hidden">
+        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-violet-500 to-violet-400"></div>
+        <div class="flex items-center justify-between mb-2">
+          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Products</p>
+          <div class="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center shrink-0">
+            <svg class="w-4 h-4 text-violet-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" /></svg>
+          </div>
+        </div>
+        <p class="text-xl font-extrabold text-slate-900">{{ s.totalProducts }}</p>
+      </div>
+    </div>
+
+    <!-- Orders by status -->
+    <div class="bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5 mb-6">
+      <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Orders by Status</h3>
+      <div class="flex flex-wrap gap-3">
+        @for (item of s.ordersByStatus; track item.status) {
+          <div class="flex items-center gap-2 bg-slate-50 rounded-xl px-3 py-2">
+            <app-status-badge [status]="item.status" />
+            <span class="text-sm font-extrabold text-slate-900">{{ item.count }}</span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Revenue trend -->
+    <div class="bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5 mb-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Revenue Trend</h3>
+        <div class="flex items-center gap-1 bg-slate-100 rounded-lg p-0.5">
+          <button (click)="trendPeriod = '7d'; onTrendPeriodChange()" class="px-2.5 py-1 text-[10px] font-bold rounded-md transition-all cursor-pointer" [class]="trendPeriod === '7d' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'">7D</button>
+          <button (click)="trendPeriod = '30d'; onTrendPeriodChange()" class="px-2.5 py-1 text-[10px] font-bold rounded-md transition-all cursor-pointer" [class]="trendPeriod === '30d' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'">30D</button>
+          <button (click)="trendPeriod = '90d'; onTrendPeriodChange()" class="px-2.5 py-1 text-[10px] font-bold rounded-md transition-all cursor-pointer" [class]="trendPeriod === '90d' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'">90D</button>
+        </div>
+      </div>
+      @if (trendLoading()) {
+        <div class="flex items-center justify-center py-12">
+          <svg class="animate-spin h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        </div>
+      } @else if (trendError()) {
+        <div class="text-center py-8">
+          <p class="text-sm text-red-600 mb-2">{{ trendError() }}</p>
+          <button (click)="onTrendPeriodChange()" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 cursor-pointer">Retry</button>
+        </div>
+      } @else if (trendData().length === 0) {
+        <p class="text-sm text-slate-400 py-8 text-center">No revenue data for this period.</p>
+      } @else {
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-slate-100">
+            <thead>
+              <tr class="bg-slate-50/80">
+                <th class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Date</th>
+                <th class="px-4 py-2.5 text-right text-[10px] font-bold text-slate-400 uppercase tracking-widest">Revenue</th>
+                <th class="px-4 py-2.5 text-right text-[10px] font-bold text-slate-400 uppercase tracking-widest">Orders</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-50">
+              @for (point of trendData(); track point.date) {
+                <tr class="hover:bg-indigo-50/30 transition-colors">
+                  <td class="px-4 py-2.5 text-sm text-slate-700">{{ point.date }}</td>
+                  <td class="px-4 py-2.5 text-sm text-right font-bold text-slate-900">{{ point.revenue | thaiBaht }}</td>
+                  <td class="px-4 py-2.5 text-sm text-right text-slate-500">{{ point.orderCount }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+
+    <!-- Top products -->
+    <div class="bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Top Products</h3>
+        <div class="flex items-center gap-1 bg-slate-100 rounded-lg p-0.5">
+          @for (limit of [5, 10, 25]; track limit) {
+            <button
+              (click)="topLimit = limit; onTopLimitChange()"
+              class="px-2.5 py-1 text-[10px] font-bold rounded-md transition-all cursor-pointer"
+              [class]="topLimit === limit ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
+            >
+              Top {{ limit }}
+            </button>
+          }
+        </div>
+      </div>
+      @if (topLoading()) {
+        <div class="flex items-center justify-center py-12">
+          <svg class="animate-spin h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        </div>
+      } @else if (topError()) {
+        <div class="text-center py-8">
+          <p class="text-sm text-red-600 mb-2">{{ topError() }}</p>
+          <button (click)="onTopLimitChange()" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 cursor-pointer">Retry</button>
+        </div>
+      } @else if (topProducts().length === 0) {
+        <p class="text-sm text-slate-400 py-8 text-center">No product sales data.</p>
+      } @else {
+        <div class="space-y-3">
+          @for (p of topProducts(); track p.productId; let i = $index) {
+            <div class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors">
+              <span class="w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold shrink-0"
+                [class]="i === 0 ? 'bg-amber-100 text-amber-700' : i === 1 ? 'bg-slate-200 text-slate-600' : i === 2 ? 'bg-orange-100 text-orange-700' : 'bg-slate-100 text-slate-400'">
+                {{ i + 1 }}
+              </span>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-semibold text-slate-900 truncate">{{ p.productName }}</p>
+                <p class="text-[10px] text-slate-400">{{ p.sku }} · {{ p.totalQuantitySold }} sold</p>
+              </div>
+              <span class="text-xs font-bold text-emerald-700 shrink-0">{{ p.totalRevenue | thaiBaht }}</span>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

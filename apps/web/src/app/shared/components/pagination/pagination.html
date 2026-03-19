@@ -1,0 +1,39 @@
+@if (totalPages() > 1) {
+  <nav class="flex items-center justify-center gap-1">
+    <button
+      (click)="onPage(page() - 1)"
+      [disabled]="page() <= 1"
+      class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+    >
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
+      Prev
+    </button>
+
+    @for (p of pages(); track p) {
+      @if (p === -1) {
+        <span class="px-1.5 py-1.5 text-xs text-slate-300">...</span>
+      } @else {
+        <button
+          (click)="onPage(p)"
+          class="cursor-pointer transition-all"
+          [class]="
+            p === page()
+              ? 'w-8 h-8 text-xs font-bold rounded-lg bg-indigo-600 text-white shadow-sm shadow-indigo-200'
+              : 'w-8 h-8 text-xs font-medium rounded-lg text-slate-600 hover:bg-slate-100'
+          "
+        >
+          {{ p }}
+        </button>
+      }
+    }
+
+    <button
+      (click)="onPage(page() + 1)"
+      [disabled]="page() >= totalPages()"
+      class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+    >
+      Next
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+    </button>
+  </nav>
+}

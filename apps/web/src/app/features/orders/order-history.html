@@ -1,0 +1,123 @@
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+  <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8 animate-fade-up">
+    <div>
+      <h1 class="text-heading text-2xl sm:text-3xl text-slate-900">My Orders</h1>
+      @if (!loading() && pagination(); as p) {
+        <p class="mt-1.5 text-sm text-slate-500">
+          <span class="font-semibold text-indigo-600">{{ p.total }}</span> {{ p.total === 1 ? 'order' : 'orders' }} total
+        </p>
+      }
+    </div>
+    <div>
+      <label for="status-filter" class="block text-xs font-semibold text-slate-600 mb-2">Filter by status</label>
+      <select
+        id="status-filter"
+        [ngModel]="statusFilter()"
+        (ngModelChange)="onFilterChange($event)"
+        class="rounded-xl border border-slate-300/80 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-700 focus:bg-white focus:border-indigo-500 focus:outline-none transition-all"
+      >
+        <option value="">All Statuses</option>
+        <option value="PENDING">Pending</option>
+        <option value="AWAITING_PAYMENT">Awaiting Payment</option>
+        <option value="PAYMENT_REVIEW">Payment Review</option>
+        <option value="APPROVED">Approved</option>
+        <option value="PROCESSING">Processing</option>
+        <option value="SHIPPED">Shipped</option>
+        <option value="DELIVERED">Delivered</option>
+        <option value="REJECTED">Rejected</option>
+        <option value="CANCELLED">Cancelled</option>
+      </select>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="space-y-3">
+      @for (_ of [1, 2, 3]; track $index) {
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-5">
+          <div class="flex justify-between">
+            <div class="space-y-2.5">
+              <div class="h-4 bg-slate-200 rounded-full w-36 shimmer"></div>
+              <div class="h-3 bg-slate-200 rounded-full w-24 shimmer"></div>
+              <div class="h-3 bg-slate-200 rounded-full w-44 shimmer"></div>
+            </div>
+            <div class="space-y-2.5 text-right">
+              <div class="h-5 bg-slate-200 rounded-full w-20 ml-auto shimmer"></div>
+              <div class="h-4 bg-slate-200 rounded-full w-28 ml-auto shimmer"></div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  } @else if (error()) {
+    <div class="bg-white rounded-2xl shadow-md border border-slate-200/60 p-10 text-center">
+      <app-alert-banner type="error" [message]="error()" />
+      <div class="mt-5">
+        <button (click)="goToPage(1)" class="btn-secondary rounded-xl px-5 py-2.5 text-sm cursor-pointer">Retry</button>
+      </div>
+    </div>
+  } @else if (orders().length === 0) {
+    <div class="bg-white rounded-2xl shadow-md border border-slate-200/60">
+      <app-empty-state
+        title="No orders found"
+        [description]="statusFilter() ? 'No orders match the selected filter.' : 'You haven\u0027t placed any orders yet.'"
+      >
+        <div icon>
+          <svg class="mx-auto h-12 w-12 text-slate-300" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+          </svg>
+        </div>
+        <a
+          routerLink="/products"
+          class="btn-primary rounded-xl px-5 py-2.5 text-sm mt-4 inline-flex"
+        >
+          Start Shopping
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" /></svg>
+        </a>
+      </app-empty-state>
+    </div>
+  } @else {
+    <div class="space-y-2.5">
+      @for (order of orders(); track order.id) {
+        <a
+          [routerLink]="['/account/orders', order.id]"
+          class="group block bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5 hover:border-indigo-200/50 hover:shadow-lg hover:shadow-indigo-100/30 hover:-translate-y-0.5 transition-all duration-300"
+        >
+          <div class="flex items-start justify-between gap-4">
+            <div class="min-w-0">
+              <div class="flex items-center gap-3 flex-wrap">
+                <p class="font-mono text-sm font-bold text-slate-900">{{ order.orderNumber }}</p>
+                <app-status-badge [status]="order.status" />
+              </div>
+              <div class="flex flex-wrap items-center gap-2 mt-2 text-xs text-slate-400">
+                <span>{{ order.createdAt | date:'mediumDate' }}</span>
+                <span class="text-slate-200">·</span>
+                <span>{{ order.itemCount }} {{ order.itemCount === 1 ? 'item' : 'items' }}</span>
+                <span class="text-slate-200">·</span>
+                <span>{{ order.paymentMethod === 'COD' ? 'Cash on Delivery' : 'PromptPay QR' }}</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 shrink-0">
+              <p class="text-lg font-extrabold text-slate-900">{{ order.totalAmount | thaiBaht }}</p>
+              <svg
+                class="w-4 h-4 text-slate-300 group-hover:text-indigo-400 group-hover:translate-x-0.5 transition-all duration-200 shrink-0"
+                fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+              </svg>
+            </div>
+          </div>
+        </a>
+      }
+    </div>
+
+    @if (pagination(); as p) {
+      @if (p.totalPages > 1) {
+        <app-pagination
+          [page]="p.page"
+          [totalPages]="p.totalPages"
+          (pageChange)="goToPage($event)"
+        />
+      }
+    }
+  }
+</div>

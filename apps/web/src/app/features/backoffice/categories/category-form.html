@@ -1,0 +1,119 @@
+<div>
+  <a routerLink="/backoffice/categories" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-indigo-600 mb-5 transition-colors group">
+    <svg class="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+    </svg>
+    Back to Categories
+  </a>
+
+  <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight mb-6">{{ isEdit() ? 'Edit Category' : 'New Category' }}</h1>
+
+  @if (loading()) {
+    <div class="bg-white rounded-2xl border border-slate-200/60 p-6 max-w-lg space-y-4">
+      @for (_ of [1, 2, 3, 4]; track $index) {
+        <div class="space-y-1.5">
+          <div class="h-3 w-20 bg-slate-200 rounded-full shimmer"></div>
+          <div class="h-10 bg-slate-200 rounded-xl shimmer"></div>
+        </div>
+      }
+    </div>
+  } @else {
+    <form #catForm="ngForm" (ngSubmit)="onSave(catForm)" class="bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 overflow-hidden max-w-lg">
+      <div class="p-6 space-y-5">
+        <div>
+          <label for="cf-name" class="block text-xs font-semibold text-slate-600 mb-1.5">Name <span class="text-red-400">*</span></label>
+          <input
+            id="cf-name"
+            type="text"
+            [(ngModel)]="form.name"
+            #cfNameRef="ngModel"
+            name="name"
+            required
+            placeholder="Category name"
+            [class.input-error]="(cfNameRef.invalid && (cfNameRef.touched || submitted)) || serverFieldErrors()['name']"
+            class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-colors"
+          />
+          @if (cfNameRef.invalid && (cfNameRef.touched || submitted)) {
+            <p class="mt-1.5 text-xs text-red-600 flex items-center gap-1"><svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" /></svg> Category name is required.</p>
+          } @else if (serverFieldErrors()['name']) {
+            <p class="mt-1.5 text-xs text-red-600 flex items-center gap-1"><svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" /></svg> {{ serverFieldErrors()['name'] }}</p>
+          }
+        </div>
+        <div>
+          <label for="cf-slug" class="block text-xs font-semibold text-slate-600 mb-1.5">Slug <span class="text-red-400">*</span></label>
+          <input
+            id="cf-slug"
+            type="text"
+            [(ngModel)]="form.slug"
+            #cfSlugRef="ngModel"
+            name="slug"
+            required
+            placeholder="category-slug"
+            [class.input-error]="(cfSlugRef.invalid && (cfSlugRef.touched || submitted)) || serverFieldErrors()['slug']"
+            class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-mono text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-colors"
+          />
+          @if (cfSlugRef.invalid && (cfSlugRef.touched || submitted)) {
+            <p class="mt-1.5 text-xs text-red-600 flex items-center gap-1"><svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" /></svg> Slug is required.</p>
+          } @else if (serverFieldErrors()['slug']) {
+            <p class="mt-1.5 text-xs text-red-600 flex items-center gap-1"><svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" /></svg> {{ serverFieldErrors()['slug'] }}</p>
+          }
+        </div>
+        <div>
+          <label for="cf-desc" class="block text-xs font-semibold text-slate-600 mb-1.5">Description</label>
+          <textarea
+            id="cf-desc"
+            [(ngModel)]="form.description"
+            name="description"
+            rows="3"
+            placeholder="Optional description"
+            [class.input-error]="serverFieldErrors()['description']"
+            class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-colors resize-none"
+          ></textarea>
+          @if (serverFieldErrors()['description']) {
+            <p class="mt-1.5 text-xs text-red-600">{{ serverFieldErrors()['description'] }}</p>
+          }
+        </div>
+        <div>
+          <label for="cf-parent" class="block text-xs font-semibold text-slate-600 mb-1.5">Parent Category</label>
+          <select
+            id="cf-parent"
+            [(ngModel)]="form.parentId"
+            name="parentId"
+            [class.input-error]="serverFieldErrors()['parentId']"
+            class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-colors"
+          >
+            <option [ngValue]="null">None (top-level)</option>
+            @for (cat of parentCategories(); track cat.id) {
+              <option [ngValue]="cat.id">{{ cat.name }}</option>
+            }
+          </select>
+          @if (serverFieldErrors()['parentId']) {
+            <p class="mt-1.5 text-xs text-red-600">{{ serverFieldErrors()['parentId'] }}</p>
+          }
+        </div>
+      </div>
+
+      @if (errorMsg()) {
+        <div class="px-6 pb-2">
+          <app-alert-banner type="error" [message]="errorMsg()" />
+        </div>
+      }
+
+      <div class="bg-slate-50/60 border-t border-slate-200 px-6 py-4 flex items-center gap-3">
+        <button
+          type="submit"
+          [disabled]="saving()"
+          class="rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-indigo-600/20 hover:from-indigo-500 hover:to-violet-500 disabled:from-slate-300 disabled:to-slate-300 disabled:shadow-none disabled:cursor-not-allowed cursor-pointer transition-all duration-200"
+        >
+          {{ saving() ? 'Saving...' : (isEdit() ? 'Update Category' : 'Create Category') }}
+        </button>
+        <a
+          routerLink="/backoffice/categories"
+          class="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 shadow-sm transition-all duration-150"
+        >
+          Cancel
+        </a>
+      </div>
+    </form>
+  }
+</div>

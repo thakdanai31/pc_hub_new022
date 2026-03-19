@@ -1,0 +1,233 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+  @if (loading()) {
+    <!-- Loading skeleton -->
+    <div class="animate-fade-in">
+      <div class="h-4 bg-slate-200 rounded-full w-48 mb-8 shimmer"></div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14">
+        <div class="aspect-[4/3] bg-slate-200 rounded-2xl shimmer"></div>
+        <div class="space-y-4 py-2">
+          <div class="h-4 bg-slate-200 rounded-full w-1/4 shimmer"></div>
+          <div class="h-10 bg-slate-200 rounded-lg w-3/4 shimmer"></div>
+          <div class="h-28 bg-slate-200 rounded-2xl shimmer"></div>
+          <div class="h-12 bg-slate-200 rounded-xl shimmer"></div>
+          <div class="flex gap-3">
+            <div class="h-14 bg-slate-200 rounded-xl flex-1 shimmer"></div>
+            <div class="h-14 bg-slate-200 rounded-xl flex-1 shimmer"></div>
+          </div>
+          <div class="h-32 bg-slate-200 rounded-xl mt-4 shimmer"></div>
+        </div>
+      </div>
+    </div>
+  } @else if (notFound()) {
+    <div class="bg-white rounded-2xl shadow-md border border-slate-200/60">
+      <app-empty-state
+        title="Product Not Found"
+        description="The product you're looking for doesn't exist or has been removed."
+      >
+        <div icon>
+          <svg class="mx-auto h-14 w-14 text-slate-300" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m6 4.125 2.25 2.25m0 0 2.25 2.25M12 13.875l2.25-2.25M12 13.875l-2.25 2.25M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
+          </svg>
+        </div>
+        <a routerLink="/products" class="btn-primary rounded-xl px-5 py-2.5 text-sm mt-4 inline-flex">
+          Browse Products
+        </a>
+      </app-empty-state>
+    </div>
+  } @else if (error()) {
+    <div class="bg-white rounded-2xl shadow-md border border-slate-200/60 p-10 text-center">
+      <app-alert-banner type="error" [message]="error()" />
+      <div class="mt-5">
+        <button (click)="loadProduct()" class="btn-secondary rounded-xl px-5 py-2.5 text-sm cursor-pointer">
+          Retry
+        </button>
+      </div>
+    </div>
+  } @else if (product(); as p) {
+    <!-- Breadcrumb -->
+    <nav class="flex items-center gap-2 text-sm mb-8 animate-fade-up">
+      <a routerLink="/products" class="text-slate-500 hover:text-indigo-600 transition-colors">Products</a>
+      <svg class="w-3.5 h-3.5 text-slate-300 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+      <a [routerLink]="['/categories', p.category.slug]" class="text-slate-500 hover:text-indigo-600 transition-colors">
+        {{ p.category.name }}
+      </a>
+      <svg class="w-3.5 h-3.5 text-slate-300 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+      <span class="text-slate-900 font-semibold truncate">{{ p.name }}</span>
+    </nav>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14">
+      <!-- Image Gallery -->
+      <div class="lg:sticky lg:top-24 lg:self-start animate-fade-up">
+        <div class="aspect-[4/3] bg-white rounded-2xl overflow-hidden border border-slate-200/60 mb-3 shadow-md shadow-slate-200/50">
+          <img
+            [src]="selectedImage() ?? '/images/no-image.svg'"
+            [alt]="p.name"
+            class="w-full h-full object-cover"
+          />
+        </div>
+
+        @if (p.images.length > 1) {
+          <div class="grid grid-cols-4 gap-2.5">
+            @for (img of p.images; track img.id) {
+              <button
+                (click)="selectImage(img.imageUrl)"
+                class="aspect-square rounded-xl overflow-hidden border-2 cursor-pointer transition-all duration-200"
+                [class]="
+                  selectedImage() === img.imageUrl
+                    ? 'border-indigo-600 shadow-md shadow-indigo-200/50 scale-[1.02]'
+                    : 'border-slate-200/80 hover:border-slate-400'
+                "
+              >
+                <img
+                  [src]="img.imageUrl"
+                  [alt]="img.altText ?? p.name"
+                  class="w-full h-full object-cover"
+                />
+              </button>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Product Info -->
+      <div class="animate-fade-up" style="animation-delay: 100ms;">
+        <!-- Brand & SKU -->
+        <div class="flex items-center gap-3 mb-3">
+          <a [routerLink]="['/brands', p.brand.slug]" class="inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-700 text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition-colors">
+            {{ p.brand.name }}
+          </a>
+          <span class="text-mono text-slate-400">{{ p.sku }}</span>
+        </div>
+
+        <h1 class="text-heading text-2xl sm:text-3xl text-slate-900 leading-snug mb-6">{{ p.name }}</h1>
+
+        <!-- Price & Stock block -->
+        <div class="relative bg-white rounded-2xl p-6 mb-6 border border-slate-200/60 shadow-md shadow-slate-200/30 overflow-hidden">
+          <!-- Subtle gradient accent -->
+          <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-violet-500 to-indigo-500"></div>
+
+          <p class="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-4">
+            {{ p.price | thaiBaht }}
+          </p>
+
+          <div class="flex items-center flex-wrap gap-2.5">
+            @if (p.stock > 0) {
+              <span class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-full px-3 py-1.5 text-xs font-semibold">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 status-dot-pulse"></span>
+                In stock ({{ p.stock }} available)
+              </span>
+            } @else {
+              <span class="inline-flex items-center gap-1.5 bg-red-50 text-red-600 border border-red-100 rounded-full px-3 py-1.5 text-xs font-semibold">
+                <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                Out of stock
+              </span>
+            }
+
+            @if (p.warrantyMonths) {
+              <span class="inline-flex items-center gap-1.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-full px-3 py-1.5 text-xs font-semibold">
+                <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" /></svg>
+                {{ p.warrantyMonths }}mo warranty
+              </span>
+            }
+          </div>
+        </div>
+
+        <!-- Quantity selector -->
+        <div class="flex items-center gap-4 mb-5">
+          <span class="text-sm font-semibold text-slate-700">Quantity:</span>
+          <div class="inline-flex items-center rounded-xl border border-slate-300/80 overflow-hidden bg-white shadow-sm">
+            <button
+              (click)="decrementQty()"
+              [disabled]="quantity() <= 1"
+              class="w-11 h-11 flex items-center justify-center text-slate-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors text-lg"
+            >
+              −
+            </button>
+            <span class="w-14 h-11 flex items-center justify-center text-sm font-bold text-slate-900 border-x border-slate-200 bg-slate-50/50">{{ quantity() }}</span>
+            <button
+              (click)="incrementQty(p.stock)"
+              [disabled]="quantity() >= p.stock"
+              class="w-11 h-11 flex items-center justify-center text-slate-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors text-lg"
+            >
+              +
+            </button>
+          </div>
+        </div>
+
+        <!-- Cart feedback -->
+        @if (cartMessage()) {
+          <div class="mb-4 animate-fade-in">
+            <app-alert-banner type="success" [message]="cartMessage()" [dismissible]="true" />
+          </div>
+        }
+        @if (cartError()) {
+          <div class="mb-4 animate-fade-in">
+            <app-alert-banner type="error" [message]="cartError()" />
+          </div>
+        }
+
+        <!-- Action buttons -->
+        <div class="flex gap-3 mb-8">
+          <button
+            (click)="addToCart(p.id)"
+            [disabled]="p.stock === 0 || addingToCart()"
+            class="flex-1 btn-primary rounded-xl px-4 py-3.5 text-sm shadow-lg shadow-indigo-600/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none cursor-pointer"
+          >
+            @if (addingToCart()) {
+              <span class="spinner w-4 h-4"></span>
+              Adding...
+            } @else {
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" /></svg>
+              Add to Cart
+            }
+          </button>
+          <button
+            (click)="buyNow(p.id)"
+            [disabled]="p.stock === 0"
+            class="flex-1 btn-secondary rounded-xl px-4 py-3.5 text-sm font-bold border-2 border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-300 disabled:border-slate-200 disabled:text-slate-400 disabled:bg-transparent disabled:cursor-not-allowed cursor-pointer"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" /></svg>
+            Buy Now
+          </button>
+        </div>
+
+        <!-- Description -->
+        <div class="bg-white rounded-2xl border border-slate-200/60 p-6 shadow-sm mb-5">
+          <h2 class="text-subheading text-base text-slate-900 mb-3 flex items-center gap-2">
+            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>
+            Description
+          </h2>
+          <div class="text-body text-sm text-slate-600 whitespace-pre-line">{{ p.description }}</div>
+        </div>
+
+        <!-- Product details table -->
+        <div class="bg-white rounded-2xl border border-slate-200/60 p-6 shadow-sm">
+          <h2 class="text-subheading text-base text-slate-900 mb-4 flex items-center gap-2">
+            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6Z" /></svg>
+            Specifications
+          </h2>
+          <dl class="grid grid-cols-2 gap-x-6 gap-y-4">
+            <div class="bg-slate-50/80 rounded-xl p-3.5">
+              <dt class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Brand</dt>
+              <dd class="text-sm font-semibold text-slate-900">{{ p.brand.name }}</dd>
+            </div>
+            <div class="bg-slate-50/80 rounded-xl p-3.5">
+              <dt class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Category</dt>
+              <dd class="text-sm font-semibold text-slate-900">{{ p.category.name }}</dd>
+            </div>
+            <div class="bg-slate-50/80 rounded-xl p-3.5">
+              <dt class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">SKU</dt>
+              <dd class="text-mono text-sm text-slate-900">{{ p.sku }}</dd>
+            </div>
+            @if (p.warrantyMonths) {
+              <div class="bg-slate-50/80 rounded-xl p-3.5">
+                <dt class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Warranty</dt>
+                <dd class="text-sm font-semibold text-slate-900">{{ p.warrantyMonths }} months</dd>
+              </div>
+            }
+          </dl>
+        </div>
+      </div>
+    </div>
+  }
+</div>

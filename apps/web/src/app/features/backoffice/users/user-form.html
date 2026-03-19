@@ -1,0 +1,165 @@
+@if (!validRole()) {
+  <p class="text-slate-500">Redirecting...</p>
+} @else {
+<div>
+  <a routerLink="/backoffice/users" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-indigo-600 mb-5 transition-colors group">
+    <svg class="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+    </svg>
+    Back to Users
+  </a>
+
+  <div class="flex items-center gap-3 mb-6">
+    <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Create {{ roleLabel() }}</h1>
+    <span class="inline-flex items-center px-2.5 py-0.5 text-[10px] font-bold rounded-lg"
+      [class]="roleLabel() === 'Admin' ? 'bg-purple-50 text-purple-700' : 'bg-indigo-50 text-indigo-700'">
+      {{ roleLabel() | uppercase }}
+    </span>
+  </div>
+
+  <form #userForm="ngForm" (ngSubmit)="onSubmit(userForm)" class="bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 overflow-hidden max-w-lg">
+    <div class="p-6 space-y-5">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <div>
+          <label for="uf-fn" class="block text-xs font-semibold text-slate-600 mb-1.5">First Name <span class="text-red-400">*</span></label>
+          <input
+            id="uf-fn"
+            type="text"
+            [(ngModel)]="form.firstName"
+            #fnRef="ngModel"
+            name="firstName"
+            required
+            placeholder="First name"
+            autocomplete="given-name"
+            [class.input-error]="fnRef.invalid && (fnRef.touched || submitted)"
+            class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-colors"
+          />
+          @if (fnRef.invalid && (fnRef.touched || submitted)) {
+            <p class="mt-1.5 text-xs text-red-600 flex items-center gap-1"><svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" /></svg> First name is required.</p>
+          }
+        </div>
+        <div>
+          <label for="uf-ln" class="block text-xs font-semibold text-slate-600 mb-1.5">Last Name <span class="text-red-400">*</span></label>
+          <input
+            id="uf-ln"
+            type="text"
+            [(ngModel)]="form.lastName"
+            #lnRef="ngModel"
+            name="lastName"
+            required
+            placeholder="Last name"
+            autocomplete="family-name"
+            [class.input-error]="lnRef.invalid && (lnRef.touched || submitted)"
+            class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-colors"
+          />
+          @if (lnRef.invalid && (lnRef.touched || submitted)) {
+            <p class="mt-1.5 text-xs text-red-600 flex items-center gap-1"><svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" /></svg> Last name is required.</p>
+          }
+        </div>
+      </div>
+      <div>
+        <label for="uf-email" class="block text-xs font-semibold text-slate-600 mb-1.5">Email <span class="text-red-400">*</span></label>
+        <input
+          id="uf-email"
+          type="email"
+          [(ngModel)]="form.email"
+          #emRef="ngModel"
+          name="email"
+          required
+          email
+          placeholder="user@example.com"
+          autocomplete="email"
+          [class.input-error]="(emRef.invalid && (emRef.touched || submitted)) || serverFieldErrors()['email']"
+          class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-colors"
+        />
+        @if (emRef.invalid && (emRef.touched || submitted)) {
+          <p class="mt-1.5 text-xs text-red-600 flex items-center gap-1">
+            <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" /></svg>
+            @if (emRef.errors?.['required']) {
+              Email is required.
+            } @else if (emRef.errors?.['email']) {
+              Please enter a valid email address.
+            }
+          </p>
+        } @else if (serverFieldErrors()['email']) {
+          <p class="mt-1.5 text-xs text-red-600 flex items-center gap-1"><svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" /></svg> {{ serverFieldErrors()['email'] }}</p>
+        }
+      </div>
+      <div>
+        <label for="uf-phone" class="block text-xs font-semibold text-slate-600 mb-1.5">Phone Number <span class="text-red-400">*</span></label>
+        <input
+          id="uf-phone"
+          type="text"
+          [(ngModel)]="form.phoneNumber"
+          #phRef="ngModel"
+          name="phoneNumber"
+          required
+          minlength="9"
+          placeholder="0812345678"
+          autocomplete="tel"
+          [class.input-error]="phRef.invalid && (phRef.touched || submitted)"
+          class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-colors"
+        />
+        @if (phRef.invalid && (phRef.touched || submitted)) {
+          <p class="mt-1.5 text-xs text-red-600 flex items-center gap-1">
+            <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" /></svg>
+            @if (phRef.errors?.['required']) {
+              Phone number is required.
+            } @else if (phRef.errors?.['minlength']) {
+              Phone number must be at least 9 characters.
+            }
+          </p>
+        }
+      </div>
+      <div>
+        <label for="uf-pass" class="block text-xs font-semibold text-slate-600 mb-1.5">Password <span class="text-red-400">*</span></label>
+        <input
+          id="uf-pass"
+          type="password"
+          [(ngModel)]="form.password"
+          #pwRef="ngModel"
+          name="password"
+          required
+          minlength="8"
+          placeholder="Minimum 8 characters"
+          autocomplete="new-password"
+          [class.input-error]="pwRef.invalid && (pwRef.touched || submitted)"
+          class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-colors"
+        />
+        @if (pwRef.invalid && (pwRef.touched || submitted)) {
+          <p class="mt-1.5 text-xs text-red-600 flex items-center gap-1">
+            <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" /></svg>
+            @if (pwRef.errors?.['required']) {
+              Password is required.
+            } @else if (pwRef.errors?.['minlength']) {
+              Password must be at least 8 characters.
+            }
+          </p>
+        }
+      </div>
+    </div>
+
+    @if (errorMsg()) {
+      <div class="px-6 pb-2">
+        <app-alert-banner type="error" [message]="errorMsg()" />
+      </div>
+    }
+
+    <div class="bg-slate-50/60 border-t border-slate-200 px-6 py-4 flex items-center gap-3">
+      <button
+        type="submit"
+        [disabled]="saving()"
+        class="rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-indigo-600/20 hover:from-indigo-500 hover:to-violet-500 disabled:from-slate-300 disabled:to-slate-300 disabled:shadow-none disabled:cursor-not-allowed cursor-pointer transition-all duration-200"
+      >
+        {{ saving() ? 'Creating...' : 'Create ' + roleLabel() }}
+      </button>
+      <a
+        routerLink="/backoffice/users"
+        class="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 shadow-sm transition-all duration-150"
+      >
+        Cancel
+      </a>
+    </div>
+  </form>
+</div>
+}

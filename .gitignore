@@ -1,0 +1,11 @@
+node_modules
+dist
+coverage
+.env
+.env.*
+!.env.example
+.prisma
+generated/
+.claude/settings.local.json
+e2e/test-results/
+e2e/playwright-report/e2e/node_modules/

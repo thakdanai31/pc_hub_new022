@@ -1,0 +1,238 @@
+<div class="flex min-h-[calc(100vh-5rem)]">
+  <!-- Left brand panel -->
+  <div class="hidden lg:flex lg:w-1/2 relative bg-slate-950 items-center justify-center p-12 overflow-hidden">
+    <!-- Background layers -->
+    <div class="absolute inset-0 pointer-events-none">
+      <div class="absolute inset-0 bg-grid-dark"></div>
+      <div class="absolute inset-0" style="background: radial-gradient(ellipse at 30% 40%, rgb(79 70 229 / 0.2) 0%, transparent 60%), radial-gradient(ellipse at 70% 70%, rgb(124 58 237 / 0.15) 0%, transparent 50%);"></div>
+    </div>
+
+    <div class="relative max-w-sm text-center animate-fade-up">
+      <!-- Decorative orbit -->
+      <div class="relative w-28 h-28 mx-auto mb-8">
+        <div class="absolute inset-0 rounded-full border border-indigo-500/15 animate-[spin_20s_linear_infinite]">
+          <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-violet-400/60"></div>
+        </div>
+        <div class="absolute inset-3 rounded-full border border-violet-500/10 animate-[spin_15s_linear_infinite_reverse]"></div>
+        <div class="absolute inset-0 flex items-center justify-center">
+          <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center shadow-2xl shadow-indigo-600/30 rotate-3">
+            <span class="text-xl font-black text-white -rotate-3">PC</span>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="text-heading text-3xl text-white">Join PC Hub</h2>
+      <p class="mt-3 text-slate-400 leading-relaxed max-w-xs mx-auto">
+        Create your account to start building your dream PC with quality components.
+      </p>
+
+      <!-- Stats cards -->
+      <div class="mt-10 grid grid-cols-3 gap-3">
+        <div class="card-glass-dark rounded-xl p-4 text-center">
+          <p class="text-xl font-black text-gradient">Free</p>
+          <p class="text-[11px] text-slate-400 mt-1">Shipping</p>
+        </div>
+        <div class="card-glass-dark rounded-xl p-4 text-center">
+          <p class="text-xl font-black text-gradient">24/7</p>
+          <p class="text-[11px] text-slate-400 mt-1">Support</p>
+        </div>
+        <div class="card-glass-dark rounded-xl p-4 text-center">
+          <p class="text-xl font-black text-gradient">100%</p>
+          <p class="text-[11px] text-slate-400 mt-1">Warranty</p>
+        </div>
+      </div>
+
+      <p class="mt-8 text-xs text-slate-500">No credit card required to create an account</p>
+    </div>
+  </div>
+
+  <!-- Right form panel -->
+  <div class="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12 bg-white bg-mesh">
+    <div class="w-full max-w-md animate-fade-up">
+      <!-- Mobile logo -->
+      <div class="lg:hidden text-center mb-8">
+        <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white text-lg font-extrabold shadow-lg shadow-indigo-600/25">
+          PC
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 border border-slate-200/60 p-8 sm:p-10">
+        <div class="mb-8">
+          <h1 class="text-heading text-2xl text-slate-900">Create account</h1>
+          <p class="mt-2 text-sm text-slate-500">
+            Already have an account?
+            <a routerLink="/login" class="font-semibold text-indigo-600 hover:text-indigo-500 transition-colors">
+              Sign in
+            </a>
+          </p>
+        </div>
+
+        @if (errorMessage()) {
+          <div class="mb-6">
+            <app-alert-banner type="error" [message]="errorMessage()" />
+          </div>
+        }
+
+        <form #regForm="ngForm" (ngSubmit)="onSubmit(regForm)" class="space-y-4">
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label for="firstName" class="block text-sm font-semibold text-slate-700 mb-2">
+                First name
+              </label>
+              <input
+                id="firstName"
+                type="text"
+                [(ngModel)]="firstName"
+                #firstNameRef="ngModel"
+                name="firstName"
+                required
+                autocomplete="given-name"
+                placeholder="John"
+                [class.input-error]="firstNameRef.invalid && (firstNameRef.touched || submitted)"
+                class="block w-full rounded-xl border border-slate-300/80 bg-slate-50/50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-indigo-500 focus:outline-none transition-all"
+              />
+              @if (firstNameRef.invalid && (firstNameRef.touched || submitted)) {
+                <p class="mt-1.5 text-xs text-red-600">First name is required.</p>
+              }
+            </div>
+            <div>
+              <label for="lastName" class="block text-sm font-semibold text-slate-700 mb-2">
+                Last name
+              </label>
+              <input
+                id="lastName"
+                type="text"
+                [(ngModel)]="lastName"
+                #lastNameRef="ngModel"
+                name="lastName"
+                required
+                autocomplete="family-name"
+                placeholder="Doe"
+                [class.input-error]="lastNameRef.invalid && (lastNameRef.touched || submitted)"
+                class="block w-full rounded-xl border border-slate-300/80 bg-slate-50/50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-indigo-500 focus:outline-none transition-all"
+              />
+              @if (lastNameRef.invalid && (lastNameRef.touched || submitted)) {
+                <p class="mt-1.5 text-xs text-red-600">Last name is required.</p>
+              }
+            </div>
+          </div>
+
+          <div>
+            <label for="email" class="block text-sm font-semibold text-slate-700 mb-2">
+              Email address
+            </label>
+            <input
+              id="email"
+              type="email"
+              [(ngModel)]="email"
+              #emailRef="ngModel"
+              name="email"
+              required
+              email
+              autocomplete="email"
+              placeholder="you@example.com"
+              [class.input-error]="(emailRef.invalid && (emailRef.touched || submitted)) || serverFieldErrors()['email']"
+              class="block w-full rounded-xl border border-slate-300/80 bg-slate-50/50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-indigo-500 focus:outline-none transition-all"
+            />
+            @if (emailRef.invalid && (emailRef.touched || submitted)) {
+              <p class="mt-1.5 text-xs text-red-600 flex items-center gap-1">
+                <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" /></svg>
+                @if (emailRef.errors?.['required']) {
+                  Email is required.
+                } @else if (emailRef.errors?.['email']) {
+                  Please enter a valid email address.
+                }
+              </p>
+            } @else if (serverFieldErrors()['email']) {
+              <p class="mt-1.5 text-xs text-red-600">{{ serverFieldErrors()['email'] }}</p>
+            }
+          </div>
+
+          <div>
+            <label for="phoneNumber" class="block text-sm font-semibold text-slate-700 mb-2">
+              Phone number
+            </label>
+            <input
+              id="phoneNumber"
+              type="tel"
+              [(ngModel)]="phoneNumber"
+              #phoneRef="ngModel"
+              name="phoneNumber"
+              required
+              minlength="9"
+              autocomplete="tel"
+              placeholder="08X-XXX-XXXX"
+              [class.input-error]="(phoneRef.invalid && (phoneRef.touched || submitted)) || serverFieldErrors()['phoneNumber']"
+              class="block w-full rounded-xl border border-slate-300/80 bg-slate-50/50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-indigo-500 focus:outline-none transition-all"
+            />
+            @if (phoneRef.invalid && (phoneRef.touched || submitted)) {
+              <p class="mt-1.5 text-xs text-red-600 flex items-center gap-1">
+                <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" /></svg>
+                @if (phoneRef.errors?.['required']) {
+                  Phone number is required.
+                } @else if (phoneRef.errors?.['minlength']) {
+                  Phone number must be at least 9 characters.
+                }
+              </p>
+            } @else if (serverFieldErrors()['phoneNumber']) {
+              <p class="mt-1.5 text-xs text-red-600">{{ serverFieldErrors()['phoneNumber'] }}</p>
+            }
+          </div>
+
+          <div>
+            <label for="password" class="block text-sm font-semibold text-slate-700 mb-2">
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              [(ngModel)]="password"
+              #passwordRef="ngModel"
+              name="password"
+              required
+              minlength="8"
+              autocomplete="new-password"
+              placeholder="Minimum 8 characters"
+              [class.input-error]="(passwordRef.invalid && (passwordRef.touched || submitted)) || serverFieldErrors()['password']"
+              class="block w-full rounded-xl border border-slate-300/80 bg-slate-50/50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-indigo-500 focus:outline-none transition-all"
+            />
+            @if (passwordRef.invalid && (passwordRef.touched || submitted)) {
+              <p class="mt-1.5 text-xs text-red-600 flex items-center gap-1">
+                <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" /></svg>
+                @if (passwordRef.errors?.['required']) {
+                  Password is required.
+                } @else if (passwordRef.errors?.['minlength']) {
+                  Password must be at least 8 characters.
+                }
+              </p>
+            } @else if (serverFieldErrors()['password']) {
+              <p class="mt-1.5 text-xs text-red-600">{{ serverFieldErrors()['password'] }}</p>
+            }
+          </div>
+
+          <div class="pt-1">
+            <button
+              type="submit"
+              [disabled]="loading()"
+              class="w-full btn-primary rounded-xl px-4 py-3.5 text-sm shadow-lg shadow-indigo-600/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+            >
+              @if (loading()) {
+                <span class="spinner w-4 h-4"></span>
+                Creating account...
+              } @else {
+                Create account
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" /></svg>
+              }
+            </button>
+          </div>
+        </form>
+
+        <!-- Trust note -->
+        <div class="mt-6 flex items-center justify-center gap-1.5 text-xs text-slate-400">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" /></svg>
+          Your information is secure and never shared
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

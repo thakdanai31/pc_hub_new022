@@ -1,0 +1,3 @@
+CREATE DATABASE IF NOT EXISTS pc_hub_test;
+GRANT ALL PRIVILEGES ON pc_hub_test.* TO 'pc_hub_user'@'%';
+FLUSH PRIVILEGES;

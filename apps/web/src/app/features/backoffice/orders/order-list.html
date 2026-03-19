@@ -1,0 +1,225 @@
+<div>
+  <app-page-header title="Orders" subtitle="Manage and review customer orders">
+    <div actions>
+      <span class="text-xs font-medium text-slate-400">
+        @if (pagination(); as pg) {
+          {{ pg.total }} total orders
+        }
+      </span>
+    </div>
+  </app-page-header>
+
+  <!-- Status Tabs -->
+  <div class="mb-5 -mx-1 overflow-x-auto">
+    <div class="flex items-center gap-1 px-1 min-w-max">
+      @for (tab of statusTabs; track tab.value) {
+        <button
+          (click)="onStatusTab(tab.value)"
+          [class]="statusFilter === tab.value
+            ? 'px-3.5 py-2 text-xs font-bold rounded-xl bg-indigo-600 text-white shadow-sm shadow-indigo-200 transition-all'
+            : 'px-3.5 py-2 text-xs font-semibold rounded-xl text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-all cursor-pointer'"
+        >
+          {{ tab.label }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Search + Filters Bar -->
+  <div class="bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-4 mb-6">
+    <div class="flex flex-col md:flex-row md:items-end gap-3">
+      <!-- Search -->
+      <div class="flex-1">
+        <div class="relative">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg>
+          <input
+            id="ol-search"
+            type="text"
+            [(ngModel)]="search"
+            (ngModelChange)="onFilterChange()"
+            placeholder="Search by customer name or email..."
+            class="w-full rounded-xl border border-slate-200 pl-9 pr-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-colors"
+          />
+        </div>
+      </div>
+      <!-- Payment Method -->
+      <div class="w-full md:w-40">
+        <select
+          id="ol-payment"
+          [(ngModel)]="paymentFilter"
+          (ngModelChange)="onFilterChange()"
+          class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-colors"
+        >
+          <option value="">All Payments</option>
+          <option value="COD">COD</option>
+          <option value="PROMPTPAY_QR">PromptPay QR</option>
+        </select>
+      </div>
+      <!-- Date From -->
+      <div class="w-full md:w-44">
+        <input
+          id="ol-date-from"
+          type="date"
+          [(ngModel)]="dateFrom"
+          (ngModelChange)="onFilterChange()"
+          placeholder="From"
+          class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-colors"
+        />
+      </div>
+      <!-- Date To -->
+      <div class="w-full md:w-44">
+        <input
+          id="ol-date-to"
+          type="date"
+          [(ngModel)]="dateTo"
+          (ngModelChange)="onFilterChange()"
+          placeholder="To"
+          class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-colors"
+        />
+      </div>
+      <!-- Clear Filters -->
+      @if (hasActiveFilters()) {
+        <button
+          (click)="clearFilters()"
+          class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold text-slate-500 hover:text-red-600 rounded-xl hover:bg-red-50 transition-colors cursor-pointer"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+          Clear
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 overflow-hidden">
+      <div class="divide-y divide-slate-100">
+        @for (_ of [1, 2, 3, 4, 5]; track $index) {
+          <div class="px-5 py-4 flex items-center gap-4 stagger-children">
+            <div class="w-9 h-9 bg-slate-200 rounded-full shimmer shrink-0"></div>
+            <div class="flex-1 space-y-2">
+              <div class="h-3.5 w-28 bg-slate-200 rounded-full shimmer"></div>
+              <div class="h-3 w-40 bg-slate-200 rounded-full shimmer"></div>
+            </div>
+            <div class="h-5 w-20 bg-slate-200 rounded-full shimmer"></div>
+            <div class="h-4 w-24 bg-slate-200 rounded-full shimmer"></div>
+          </div>
+        }
+      </div>
+    </div>
+  } @else if (orders().length === 0) {
+    <app-empty-state title="No orders found" description="Try adjusting your filters or check back later.">
+      <ng-container icon>
+        <svg class="w-10 h-10 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25Z" />
+        </svg>
+      </ng-container>
+    </app-empty-state>
+  } @else {
+    <!-- Desktop Table -->
+    <div class="hidden md:block bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 overflow-hidden">
+      <table class="min-w-full divide-y divide-slate-100">
+        <thead>
+          <tr class="bg-slate-50/80">
+            <th class="px-5 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Order</th>
+            <th class="px-5 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Customer</th>
+            <th class="px-5 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status</th>
+            <th class="px-5 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Payment</th>
+            <th class="px-5 py-3.5 text-right text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total</th>
+            <th class="px-5 py-3.5 text-right text-[10px] font-bold text-slate-400 uppercase tracking-widest">Date</th>
+            <th class="px-5 py-3.5 w-10"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100/80">
+          @for (order of orders(); track order.id) {
+            <tr
+              class="hover:bg-indigo-50/30 cursor-pointer transition-colors group"
+              [routerLink]="['/backoffice/orders', order.id]"
+            >
+              <td class="px-5 py-3.5">
+                <span class="text-sm font-bold text-indigo-600 font-mono group-hover:text-indigo-700 transition-colors">{{ order.orderNumber }}</span>
+                <p class="text-[10px] text-slate-400 mt-0.5">{{ order.itemCount }} items</p>
+              </td>
+              <td class="px-5 py-3.5">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-8 h-8 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center text-[10px] font-bold text-slate-600 shrink-0">
+                    {{ order.customer.firstName.charAt(0) }}{{ order.customer.lastName.charAt(0) }}
+                  </div>
+                  <div class="min-w-0">
+                    <p class="text-sm font-semibold text-slate-800 truncate">{{ order.customer.firstName }} {{ order.customer.lastName }}</p>
+                    <p class="text-[10px] text-slate-400 truncate">{{ order.customer.email }}</p>
+                  </div>
+                </div>
+              </td>
+              <td class="px-5 py-3.5">
+                <app-status-badge [status]="order.status" />
+              </td>
+              <td class="px-5 py-3.5">
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-lg"
+                  [class]="order.paymentMethod === 'COD' ? 'bg-slate-100 text-slate-600' : 'bg-violet-50 text-violet-700'">
+                  @if (order.paymentMethod === 'COD') {
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z" /></svg>
+                    COD
+                  } @else {
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z" /></svg>
+                    QR
+                  }
+                </span>
+              </td>
+              <td class="px-5 py-3.5 text-right">
+                <span class="text-sm font-bold text-slate-900">{{ order.totalAmount | thaiBaht }}</span>
+              </td>
+              <td class="px-5 py-3.5 text-right">
+                <span class="text-xs text-slate-500">{{ order.createdAt | date:'mediumDate' }}</span>
+                <p class="text-[10px] text-slate-400">{{ order.createdAt | date:'shortTime' }}</p>
+              </td>
+              <td class="px-3 py-3.5">
+                <svg class="w-4 h-4 text-slate-300 group-hover:text-indigo-500 transition-colors" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Mobile Cards -->
+    <div class="md:hidden space-y-3">
+      @for (order of orders(); track order.id) {
+        <a
+          [routerLink]="['/backoffice/orders', order.id]"
+          class="block bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-4 hover:shadow-lg hover:border-indigo-200 transition-all"
+        >
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <span class="text-sm font-bold text-indigo-600 font-mono">{{ order.orderNumber }}</span>
+              <app-status-badge [status]="order.status" />
+            </div>
+            <span class="text-sm font-bold text-slate-900">{{ order.totalAmount | thaiBaht }}</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <div class="w-7 h-7 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center text-[9px] font-bold text-slate-600 shrink-0">
+                {{ order.customer.firstName.charAt(0) }}{{ order.customer.lastName.charAt(0) }}
+              </div>
+              <div>
+                <p class="text-xs font-semibold text-slate-700">{{ order.customer.firstName }} {{ order.customer.lastName }}</p>
+                <p class="text-[10px] text-slate-400">{{ order.itemCount }} items · {{ order.paymentMethod === 'COD' ? 'COD' : 'QR' }}</p>
+              </div>
+            </div>
+            <span class="text-[10px] text-slate-400">{{ order.createdAt | date:'shortDate' }}</span>
+          </div>
+        </a>
+      }
+    </div>
+
+    @if (pagination(); as pg) {
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-3 mt-6">
+        <p class="text-xs font-medium text-slate-400">
+          Showing page <span class="font-bold text-slate-600">{{ pg.page }}</span> of <span class="font-bold text-slate-600">{{ pg.totalPages }}</span>
+          <span class="text-slate-300 mx-1">·</span>
+          {{ pg.total }} orders
+        </p>
+        <app-pagination [page]="pg.page" [totalPages]="pg.totalPages" (pageChange)="goToPage($event)" />
+      </div>
+    }
+  }
+</div>

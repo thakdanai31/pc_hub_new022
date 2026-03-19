@@ -1,0 +1,58 @@
+@if (visible()) {
+  <div
+    class="rounded-xl p-4 flex gap-3.5 animate-fade-in"
+    [class]="styles().container"
+    role="alert"
+  >
+    <!-- Icon -->
+    <div class="shrink-0 flex items-center justify-center w-9 h-9 rounded-lg" [class]="styles().iconBg">
+      <div [class]="styles().icon">
+        @switch (type()) {
+          @case ('error') {
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+            </svg>
+          }
+          @case ('warning') {
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+            </svg>
+          }
+          @case ('success') {
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+            </svg>
+          }
+          @case ('info') {
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+            </svg>
+          }
+        }
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="flex-1">
+      <p class="text-sm font-semibold leading-tight">
+        {{ message() }}
+      </p>
+      <div class="mt-1 text-sm opacity-90">
+        <ng-content />
+      </div>
+    </div>
+
+    <!-- Dismiss button -->
+    @if (dismissible()) {
+      <button
+        (click)="dismiss()"
+        class="shrink-0 rounded-lg p-2 hover:bg-white/20 cursor-pointer transition-colors"
+        aria-label="Dismiss"
+      >
+        <svg class="w-4 h-4 opacity-70" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+        </svg>
+      </button>
+    }
+  </div>
+}

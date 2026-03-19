@@ -1,0 +1,189 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-8 animate-fade-up">
+    <div>
+      <h1 class="text-heading text-2xl sm:text-3xl text-slate-900">{{ pageTitle() }}</h1>
+      @if (!loading() && pagination().total > 0) {
+        <p class="mt-1.5 text-sm text-slate-500">
+          Showing {{ (pagination().page - 1) * pagination().limit + 1 }}–{{ pagination().page * pagination().limit > pagination().total ? pagination().total : pagination().page * pagination().limit }} of
+          <span class="font-semibold text-indigo-600">{{ pagination().total }}</span> products
+        </p>
+      }
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="bg-white rounded-2xl shadow-md shadow-slate-200/50 border border-slate-200/60 p-5 sm:p-6 mb-8 animate-fade-up" style="animation-delay: 60ms;">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+      <!-- Search -->
+      <div class="lg:col-span-2">
+        <label for="filter-search" class="block text-xs font-semibold text-slate-600 mb-2">Search</label>
+        <div class="relative">
+          <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+          </svg>
+          <input
+            id="filter-search"
+            type="text"
+            placeholder="Search products..."
+            [ngModel]="searchInput()"
+            (ngModelChange)="onSearchInput($event)"
+            class="w-full rounded-xl border border-slate-300/80 bg-slate-50/50 pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-indigo-500 focus:outline-none transition-all"
+          />
+        </div>
+      </div>
+
+      <!-- Category -->
+      @if (!presetCategoryId()) {
+        <div>
+          <label for="filter-category" class="block text-xs font-semibold text-slate-600 mb-2">Category</label>
+          <select
+            id="filter-category"
+            [ngModel]="filters().categoryId ?? ''"
+            (ngModelChange)="onCategoryChange($event)"
+            class="w-full rounded-xl border border-slate-300/80 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-700 focus:bg-white focus:border-indigo-500 focus:outline-none transition-all"
+          >
+            <option value="">All Categories</option>
+            @for (cat of categories(); track cat.id) {
+              <option [value]="cat.id">{{ cat.name }}</option>
+            }
+          </select>
+        </div>
+      }
+
+      <!-- Brand -->
+      @if (!presetBrandId()) {
+        <div>
+          <label for="filter-brand" class="block text-xs font-semibold text-slate-600 mb-2">Brand</label>
+          <select
+            id="filter-brand"
+            [ngModel]="filters().brandId ?? ''"
+            (ngModelChange)="onBrandChange($event)"
+            class="w-full rounded-xl border border-slate-300/80 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-700 focus:bg-white focus:border-indigo-500 focus:outline-none transition-all"
+          >
+            <option value="">All Brands</option>
+            @for (brand of brands(); track brand.id) {
+              <option [value]="brand.id">{{ brand.name }}</option>
+            }
+          </select>
+        </div>
+      }
+
+      <!-- Min Price -->
+      <div>
+        <label for="filter-min-price" class="block text-xs font-semibold text-slate-600 mb-2">Min Price</label>
+        <input
+          id="filter-min-price"
+          type="number"
+          placeholder="฿0"
+          [ngModel]="filters().minPrice"
+          (ngModelChange)="onFilterChange('minPrice', $event)"
+          min="0"
+          class="w-full rounded-xl border border-slate-300/80 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-indigo-500 focus:outline-none transition-all"
+        />
+      </div>
+
+      <!-- Max Price -->
+      <div>
+        <label for="filter-max-price" class="block text-xs font-semibold text-slate-600 mb-2">Max Price</label>
+        <input
+          id="filter-max-price"
+          type="number"
+          placeholder="Any"
+          [ngModel]="filters().maxPrice"
+          (ngModelChange)="onFilterChange('maxPrice', $event)"
+          min="0"
+          class="w-full rounded-xl border border-slate-300/80 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-indigo-500 focus:outline-none transition-all"
+        />
+      </div>
+    </div>
+
+    <div class="flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
+      <!-- Sort -->
+      <div class="flex items-center gap-2.5">
+        <label for="filter-sort" class="text-xs font-semibold text-slate-600">Sort:</label>
+        <select
+          id="filter-sort"
+          [ngModel]="filters().sort"
+          (ngModelChange)="onFilterChange('sort', $event)"
+          class="rounded-xl border border-slate-300/80 bg-slate-50/50 px-3 py-2 text-sm text-slate-700 focus:bg-white focus:border-indigo-500 focus:outline-none transition-all"
+        >
+          <option value="newest">Newest</option>
+          <option value="oldest">Oldest</option>
+          <option value="price_asc">Price: Low to High</option>
+          <option value="price_desc">Price: High to Low</option>
+          <option value="name_asc">Name: A–Z</option>
+          <option value="name_desc">Name: Z–A</option>
+        </select>
+      </div>
+
+      <button
+        (click)="onClearFilters()"
+        class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg px-2.5 py-1.5 transition-all cursor-pointer"
+      >
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+        </svg>
+        Clear filters
+      </button>
+    </div>
+  </div>
+
+  <!-- Content -->
+  @if (loading()) {
+    <app-loading-skeleton variant="card" [count]="8" />
+  } @else if (error()) {
+    <div class="bg-white rounded-2xl shadow-md border border-slate-200/60 p-10 text-center">
+      <app-alert-banner type="error" [message]="error()" />
+      <div class="mt-5">
+        <button
+          (click)="loadProducts()"
+          class="btn-secondary rounded-xl px-5 py-2.5 text-sm cursor-pointer"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182" /></svg>
+          Retry
+        </button>
+      </div>
+    </div>
+  } @else if (notFound()) {
+    <div class="bg-white rounded-2xl shadow-md border border-slate-200/60">
+      <app-empty-state
+        [title]="notFound()"
+        description="The page you're looking for doesn't exist."
+      >
+        <a routerLink="/products" class="btn-primary rounded-xl px-5 py-2.5 text-sm mt-4 inline-flex">
+          Browse all products
+        </a>
+      </app-empty-state>
+    </div>
+  } @else if (products().length === 0) {
+    <div class="bg-white rounded-2xl shadow-md border border-slate-200/60">
+      <app-empty-state
+        title="No products found"
+        description="Try adjusting your search or filter criteria."
+        actionLabel="Clear filters"
+        (action)="onClearFilters()"
+      >
+        <div icon>
+          <svg class="mx-auto h-14 w-14 text-slate-300" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+          </svg>
+        </div>
+      </app-empty-state>
+    </div>
+  } @else {
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 stagger-children">
+      @for (product of products(); track product.id) {
+        <app-product-card [product]="product" />
+      }
+    </div>
+
+    <div class="mt-8">
+      <app-pagination
+        [page]="pagination().page"
+        [totalPages]="pagination().totalPages"
+        (pageChange)="onPageChange($event)"
+      />
+    </div>
+  }
+</div>

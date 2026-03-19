@@ -1,0 +1,31 @@
+<div class="text-center py-16 px-6">
+  <!-- Projected icon slot -->
+  <div class="mb-6 flex justify-center">
+    <ng-content select="[icon]">
+      <!-- Default icon if none projected -->
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 mb-4">
+        <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
+        </svg>
+      </div>
+    </ng-content>
+  </div>
+
+  <h3 class="text-xl font-semibold text-slate-900 mb-2">{{ title() }}</h3>
+
+  @if (description()) {
+    <p class="text-sm text-slate-500 mb-8 max-w-md mx-auto leading-relaxed">{{ description() }}</p>
+  }
+
+  @if (actionLabel()) {
+    <button
+      (click)="onAction()"
+      class="inline-flex items-center rounded-lg bg-gradient-to-r from-indigo-600 to-indigo-500 px-6 py-3 text-sm font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 cursor-pointer"
+    >
+      {{ actionLabel() }}
+    </button>
+  }
+
+  <!-- Projected extra content -->
+  <ng-content />
+</div>
