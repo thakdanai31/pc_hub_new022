@@ -3,21 +3,24 @@ import { RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { OrderService } from '../../core/services/order.service';
+import { LanguageService } from '../../core/services/language.service';
 import { ThaiBahtPipe } from '../../shared/pipes/thai-baht.pipe';
 import { StatusBadge } from '../../shared/components/status-badge/status-badge';
 import { EmptyState } from '../../shared/components/empty-state/empty-state';
 import { AlertBanner } from '../../shared/components/alert-banner/alert-banner';
 import { Pagination } from '../../shared/components/pagination/pagination';
+import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 import type { OrderSummary } from '../../shared/models/order.model';
 import type { PaginationMeta } from '../../shared/models/pagination.model';
 
 @Component({
   selector: 'app-order-history',
-  imports: [RouterLink, DatePipe, FormsModule, ThaiBahtPipe, StatusBadge, EmptyState, AlertBanner, Pagination],
+  imports: [RouterLink, DatePipe, FormsModule, ThaiBahtPipe, StatusBadge, EmptyState, AlertBanner, Pagination, TranslatePipe],
   templateUrl: './order-history.html',
 })
 export class OrderHistoryPage implements OnInit {
   private readonly orderService = inject(OrderService);
+  protected readonly language = inject(LanguageService);
 
   readonly loading = signal(true);
   readonly error = signal('');
@@ -53,7 +56,7 @@ export class OrderHistoryPage implements OnInit {
         this.loading.set(false);
       },
       error: () => {
-        this.error.set('Failed to load orders.');
+        this.error.set(this.language.translate('storefront.orders.history.loadError'));
         this.loading.set(false);
       },
     });

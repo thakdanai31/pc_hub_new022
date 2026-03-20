@@ -3,17 +3,20 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../../core/services/auth.service';
+import { LanguageService } from '../../../core/services/language.service';
 import { extractErrorBody } from '../../../shared/utils/error.utils';
 import { AlertBanner } from '../../../shared/components/alert-banner/alert-banner';
+import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 
 @Component({
   selector: 'app-login',
-  imports: [FormsModule, RouterLink, AlertBanner],
+  imports: [FormsModule, RouterLink, AlertBanner, TranslatePipe],
   templateUrl: './login.html',
 })
 export class Login {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  protected readonly language = inject(LanguageService);
 
   email = '';
   password = '';
@@ -39,12 +42,14 @@ export class Login {
         this.loading.set(false);
         const body = extractErrorBody(err.error);
         if (err.status === 401) {
-          this.errorMessage.set('Invalid email or password.');
+          this.errorMessage.set(this.language.translate('auth.login.invalidCredentials'));
         } else if (body.fieldErrors) {
           this.serverFieldErrors.set(body.fieldErrors);
-          this.errorMessage.set('Please fix the errors below.');
+          this.errorMessage.set(this.language.translate('auth.login.fixErrors'));
         } else {
-          this.errorMessage.set(body.message ?? 'Something went wrong. Please try again.');
+          this.errorMessage.set(
+            body.message ?? this.language.translate('common.errorGeneric'),
+          );
         }
       },
     });

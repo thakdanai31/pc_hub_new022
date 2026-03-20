@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import request from 'supertest';
 import { app } from '../src/app.js';
 import { prisma } from '../src/config/database.js';
-import { getBodyString, getBodyNumber } from './helpers.js';
+import { getBodyString, getBodyNumber, getUniqueTestPhoneNumber } from './helpers.js';
 
 const CUSTOMER = {
   firstName: 'Order',
@@ -50,6 +50,8 @@ let categoryId: number;
 let brandId: number;
 
 async function cleanDatabase() {
+  await prisma.claim.deleteMany();
+  await prisma.inventoryTransaction.deleteMany();
   await prisma.paymentSlip.deleteMany();
   await prisma.payment.deleteMany();
   await prisma.cartItem.deleteMany();
@@ -114,6 +116,7 @@ beforeAll(async () => {
   const sr = await request(app).post('/api/v1/auth/register').send({
     ...STAFF,
     email: 'stafflogin@test.com',
+    phoneNumber: getUniqueTestPhoneNumber(),
   });
   staffToken = getBodyString(sr, 'data', 'accessToken');
   // Update role to STAFF
@@ -192,6 +195,8 @@ function resetStock() {
 }
 
 async function cleanOrders() {
+  await prisma.claim.deleteMany();
+  await prisma.inventoryTransaction.deleteMany();
   await prisma.paymentSlip.deleteMany();
   await prisma.payment.deleteMany();
   await prisma.orderItem.deleteMany();
@@ -294,6 +299,30 @@ describe('GET /api/v1/account/orders/:orderId', () => {
     expect(res.body.data.addressSnapshot).toBeDefined();
   });
 
+  it('returns cancellation metadata separately for cancelled orders', async () => {
+    const { orderId } = await createCodOrder(customerToken, addressId, productId, 2);
+
+    await request(app)
+      .post(`/api/v1/backoffice/orders/${orderId}/approve`)
+      .set('Authorization', `Bearer ${staffToken}`);
+
+    await request(app)
+      .post(`/api/v1/backoffice/orders/${orderId}/cancel`)
+      .set('Authorization', `Bearer ${staffToken}`)
+      .send({ reason: 'Warehouse issue' });
+
+    const res = await request(app)
+      .get(`/api/v1/account/orders/${orderId}`)
+      .set('Authorization', `Bearer ${customerToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.status).toBe('CANCELLED');
+    expect(res.body.data.cancelReason).toBe('Warehouse issue');
+    expect(res.body.data.cancelledAt).toBeTruthy();
+    expect(res.body.data.rejectReason).toBeNull();
+    expect(res.body.data.rejectedAt).toBeNull();
+  });
+
   it('returns 404 for other customer order', async () => {
     const { orderId } = await createCodOrder(customerToken, addressId, productId);
 
@@ -354,6 +383,28 @@ describe('GET /api/v1/backoffice/orders/:orderId', () => {
     expect(res.body.data.customer).toBeDefined();
     expect(res.body.data.items).toHaveLength(1);
     expect(res.body.data.payment).not.toBeNull();
+  });
+
+  it('returns rejection metadata separately for rejected orders', async () => {
+    const { orderId } = await createCodOrder(customerToken, addressId, productId);
+
+    await request(app)
+      .post(`/api/v1/backoffice/orders/${orderId}/reject`)
+      .set('Authorization', `Bearer ${staffToken}`)
+      .send({ reason: 'Inventory allocation rejected' });
+
+    const res = await request(app)
+      .get(`/api/v1/backoffice/orders/${orderId}`)
+      .set('Authorization', `Bearer ${staffToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.status).toBe('REJECTED');
+    expect(res.body.data.rejectReason).toBe('Inventory allocation rejected');
+    expect(res.body.data.rejectedAt).toBeTruthy();
+    expect(res.body.data.rejectedByUserId).not.toBeNull();
+    expect(res.body.data.cancelReason).toBeNull();
+    expect(res.body.data.cancelledAt).toBeNull();
+    expect(res.body.data.cancelledByUserId).toBeNull();
   });
 });
 
@@ -423,7 +474,7 @@ describe('POST /api/v1/backoffice/orders/:orderId/approve', () => {
 describe('POST /api/v1/backoffice/orders/:orderId/reject', () => {
   beforeEach(cleanOrders);
 
-  it('rejects COD order and restores stock', async () => {
+  it('rejects COD order before inventory is committed', async () => {
     const { orderId } = await createCodOrder(customerToken, addressId, productId, 3);
 
     const stockBefore = (await prisma.product.findUnique({ where: { id: productId } }))?.stock;
@@ -440,12 +491,15 @@ describe('POST /api/v1/backoffice/orders/:orderId/reject', () => {
     expect(order?.status).toBe('REJECTED');
     expect(order?.rejectReason).toBe('Customer requested cancellation');
     expect(order?.rejectedByUserId).not.toBeNull();
+    expect(order?.cancelReason).toBeNull();
+    expect(order?.cancelledAt).toBeNull();
+    expect(order?.cancelledByUserId).toBeNull();
 
     const stockAfter = (await prisma.product.findUnique({ where: { id: productId } }))?.stock;
-    expect(stockAfter).toBe((stockBefore ?? 0) + 3);
+    expect(stockAfter).toBe(stockBefore);
   });
 
-  it('rejects PromptPay order in PAYMENT_REVIEW and restores stock', async () => {
+  it('rejects PromptPay order in PAYMENT_REVIEW before inventory is committed', async () => {
     const { orderId } = await createPromptPayOrder(customerToken, addressId, productId, 2);
 
     await prisma.order.update({ where: { id: orderId }, data: { status: 'PAYMENT_REVIEW' } });
@@ -465,7 +519,7 @@ describe('POST /api/v1/backoffice/orders/:orderId/reject', () => {
     expect(payment?.rejectReason).toBe('Invalid payment slip');
 
     const stockAfter = (await prisma.product.findUnique({ where: { id: productId } }))?.stock;
-    expect(stockAfter).toBe((stockBefore ?? 0) + 2);
+    expect(stockAfter).toBe(stockBefore);
   });
 
   it('cannot reject terminal-status order', async () => {
@@ -485,6 +539,60 @@ describe('POST /api/v1/backoffice/orders/:orderId/reject', () => {
 
     const res = await request(app)
       .post(`/api/v1/backoffice/orders/${orderId}/reject`)
+      .set('Authorization', `Bearer ${staffToken}`)
+      .send({});
+
+    expect(res.status).toBe(400);
+  });
+});
+
+describe('POST /api/v1/backoffice/orders/:orderId/cancel', () => {
+  beforeEach(cleanOrders);
+
+  it('cancels a processing order', async () => {
+    const { orderId } = await createCodOrder(customerToken, addressId, productId, 2);
+    await request(app)
+      .post(`/api/v1/backoffice/orders/${orderId}/approve`)
+      .set('Authorization', `Bearer ${staffToken}`);
+
+    const res = await request(app)
+      .post(`/api/v1/backoffice/orders/${orderId}/cancel`)
+      .set('Authorization', `Bearer ${staffToken}`)
+      .send({ reason: 'Warehouse issue' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.status).toBe('CANCELLED');
+
+    const order = await prisma.order.findUnique({ where: { id: orderId } });
+    expect(order?.status).toBe('CANCELLED');
+    expect(order?.cancelReason).toBe('Warehouse issue');
+    expect(order?.cancelledByUserId).not.toBeNull();
+    expect(order?.cancelledAt).not.toBeNull();
+    expect(order?.rejectReason).toBeNull();
+    expect(order?.rejectedByUserId).toBeNull();
+    expect(order?.rejectedAt).toBeNull();
+  });
+
+  it('cannot cancel order before inventory is committed', async () => {
+    const { orderId } = await createCodOrder(customerToken, addressId, productId);
+
+    const res = await request(app)
+      .post(`/api/v1/backoffice/orders/${orderId}/cancel`)
+      .set('Authorization', `Bearer ${staffToken}`)
+      .send({ reason: 'Too early to cancel' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.code).toBe('INVALID_ORDER_STATUS');
+  });
+
+  it('missing reason returns 400', async () => {
+    const { orderId } = await createCodOrder(customerToken, addressId, productId);
+    await request(app)
+      .post(`/api/v1/backoffice/orders/${orderId}/approve`)
+      .set('Authorization', `Bearer ${staffToken}`);
+
+    const res = await request(app)
+      .post(`/api/v1/backoffice/orders/${orderId}/cancel`)
       .set('Authorization', `Bearer ${staffToken}`)
       .send({});
 

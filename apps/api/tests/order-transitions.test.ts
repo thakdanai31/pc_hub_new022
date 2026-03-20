@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import request from 'supertest';
 import { app } from '../src/app.js';
 import { prisma } from '../src/config/database.js';
-import { getBodyString, getBodyNumber } from './helpers.js';
+import { getBodyString, getBodyNumber, getUniqueTestPhoneNumber } from './helpers.js';
 
 const CUSTOMER = {
   firstName: 'Trans',
@@ -31,6 +31,7 @@ let categoryId: number;
 let brandId: number;
 
 async function cleanDatabase() {
+  await prisma.inventoryTransaction.deleteMany();
   await prisma.paymentSlip.deleteMany();
   await prisma.payment.deleteMany();
   await prisma.cartItem.deleteMany();
@@ -48,6 +49,7 @@ async function cleanDatabase() {
 }
 
 async function cleanOrders() {
+  await prisma.inventoryTransaction.deleteMany();
   await prisma.paymentSlip.deleteMany();
   await prisma.payment.deleteMany();
   await prisma.orderItem.deleteMany();
@@ -88,6 +90,7 @@ beforeAll(async () => {
   await request(app).post('/api/v1/auth/register').send({
     ...CUSTOMER,
     email: 'trans-staff@test.com',
+    phoneNumber: getUniqueTestPhoneNumber(),
   });
   await prisma.user.update({
     where: { email: 'trans-staff@test.com' },
@@ -227,6 +230,18 @@ describe('Order status advancement — invalid transitions', () => {
       .post(`/api/v1/backoffice/orders/${orderId}/status`)
       .set('Authorization', `Bearer ${staffToken}`)
       .send({ status: 'SHIPPED' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.code).toBe('INVALID_STATUS_TRANSITION');
+  });
+
+  it('cannot advance PENDING directly to PROCESSING', async () => {
+    const orderId = await createCodOrder();
+
+    const res = await request(app)
+      .post(`/api/v1/backoffice/orders/${orderId}/status`)
+      .set('Authorization', `Bearer ${staffToken}`)
+      .send({ status: 'PROCESSING' });
 
     expect(res.status).toBe(400);
     expect(res.body.code).toBe('INVALID_STATUS_TRANSITION');

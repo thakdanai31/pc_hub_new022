@@ -10,4 +10,5 @@ orderAdminRouter.get('/', orderAdminController.listOrders);
 orderAdminRouter.get('/:orderId', orderAdminController.getOrder);
 orderAdminRouter.post('/:orderId/approve', orderAdminController.approveOrder);
 orderAdminRouter.post('/:orderId/reject', orderAdminController.rejectOrder);
+orderAdminRouter.post('/:orderId/cancel', orderAdminController.cancelOrder);
 orderAdminRouter.post('/:orderId/status', orderAdminController.advanceStatus);

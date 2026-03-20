@@ -1,0 +1,224 @@
+<div>
+  <a routerLink="/backoffice/claims" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-indigo-600 mb-5 transition-colors group">
+    <svg class="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+    </svg>
+    {{ 'backoffice.claims.backToClaims' | t }}
+  </a>
+
+  @if (loading()) {
+    <div class="space-y-4 stagger-children">
+      <div class="flex items-center gap-3">
+        <div class="h-8 w-36 bg-slate-200 rounded-lg shimmer"></div>
+        <div class="h-6 w-24 bg-slate-200 rounded-full shimmer"></div>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div class="lg:col-span-2 space-y-4">
+          <div class="bg-white rounded-2xl border border-slate-200/60 p-5 space-y-3">
+            <div class="h-4 w-44 bg-slate-200 rounded-full shimmer"></div>
+            <div class="h-20 w-full bg-slate-200 rounded-2xl shimmer"></div>
+          </div>
+          <div class="bg-white rounded-2xl border border-slate-200/60 p-5 space-y-3">
+            <div class="h-4 w-32 bg-slate-200 rounded-full shimmer"></div>
+            <div class="h-10 w-full bg-slate-200 rounded-xl shimmer"></div>
+            <div class="h-10 w-full bg-slate-200 rounded-xl shimmer"></div>
+          </div>
+        </div>
+        <div class="space-y-4">
+          <div class="bg-white rounded-2xl border border-slate-200/60 p-5 space-y-3">
+            <div class="h-4 w-24 bg-slate-200 rounded-full shimmer"></div>
+            <div class="h-10 w-full bg-slate-200 rounded-xl shimmer"></div>
+            <div class="h-10 w-full bg-slate-200 rounded-xl shimmer"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  } @else if (claim(); as c) {
+    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
+      <div>
+        <div class="flex items-center gap-3 flex-wrap">
+          <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">{{ 'backoffice.claims.detailTitle' | t }}</h1>
+          <span class="inline-flex items-center px-3 py-1 text-sm font-mono font-bold bg-indigo-50 text-indigo-700 rounded-xl border border-indigo-100">
+            #{{ c.id }}
+          </span>
+          <app-status-badge [status]="c.status" />
+        </div>
+        <p class="text-xs text-slate-400 mt-1.5">{{ 'backoffice.claims.submittedOn' | t:{date: (c.createdAt | date:'medium')} }}</p>
+      </div>
+      <div class="text-xs text-slate-400 shrink-0">
+        {{ 'backoffice.claims.updatedOn' | t:{date: (c.updatedAt | date:'medium')} }}
+      </div>
+    </div>
+
+    @if (successMsg()) {
+      <div class="mb-4">
+        <app-alert-banner type="success" [message]="successMsg()" [dismissible]="true" (dismissed)="successMsg.set('')" />
+      </div>
+    }
+
+    @if (errorMsg()) {
+      <div class="mb-4">
+        <app-alert-banner type="error" [message]="errorMsg()" [dismissible]="true" (dismissed)="errorMsg.set('')" />
+      </div>
+    }
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      <div class="lg:col-span-2 space-y-5">
+        <div class="bg-amber-50 border border-amber-200 rounded-2xl p-5">
+          <div class="flex items-center gap-2 mb-3">
+            <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.076-4.076a1.526 1.526 0 0 1 1.037-.443 48.282 48.282 0 0 0 5.68-.494c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" /></svg>
+            <h2 class="text-xs font-bold text-amber-700 uppercase tracking-widest">{{ 'backoffice.claims.customerIssue' | t }}</h2>
+          </div>
+          <p class="text-sm text-amber-900 leading-relaxed whitespace-pre-line">{{ c.issueDescription }}</p>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5">
+          <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">{{ 'backoffice.claims.customer' | t }}</h2>
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-100 to-violet-100 flex items-center justify-center text-sm font-bold text-indigo-700 shrink-0">
+              {{ c.user.firstName.charAt(0) }}{{ c.user.lastName.charAt(0) }}
+            </div>
+            <div>
+              <p class="text-sm font-bold text-slate-900">{{ c.user.firstName }} {{ c.user.lastName }}</p>
+              <p class="text-xs text-slate-400">{{ c.user.email }}</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+            <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-50">
+              <svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" /></svg>
+              <span class="text-slate-600 truncate">{{ c.user.email }}</span>
+            </div>
+            <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-50">
+              <svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" /></svg>
+              <span class="text-slate-600">{{ c.user.phoneNumber || '-' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5">
+          <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">{{ 'backoffice.claims.relatedPurchase' | t }}</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="rounded-2xl border border-slate-200/70 p-4 bg-slate-50/80">
+              <div class="flex items-center justify-between gap-3 mb-2">
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest">{{ 'backoffice.claims.order' | t }}</h3>
+                <app-status-badge [status]="c.order.status" />
+              </div>
+              <a [routerLink]="['/backoffice/orders', c.order.id]" class="text-sm font-bold text-indigo-600 hover:text-indigo-700 transition-colors">
+                {{ c.order.orderNumber }}
+              </a>
+              <p class="text-[11px] text-slate-400 mt-1">{{ 'backoffice.claims.orderId' | t:{id: c.orderId} }}</p>
+              <p class="text-[11px] text-slate-500 mt-3">{{ 'backoffice.claims.orderPlaced' | t:{date: (c.order.createdAt | date:'medium')} }}</p>
+            </div>
+
+            <div class="rounded-2xl border border-slate-200/70 p-4 bg-slate-50/80">
+              <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">{{ 'backoffice.claims.product' | t }}</h3>
+              <p class="text-sm font-bold text-slate-900">{{ c.product.name }}</p>
+              <p class="text-[11px] text-slate-400 mt-1">{{ 'common.sku' | t }}: {{ c.product.sku }}</p>
+              <p class="text-[11px] text-slate-500 mt-3">{{ 'backoffice.claims.productId' | t:{id: c.productId} }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-5">
+        <div class="bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5">
+          <div class="flex items-center gap-2 mb-4">
+            <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" /></svg>
+            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest">{{ 'backoffice.claims.updateStatus' | t }}</h2>
+          </div>
+
+          <div class="space-y-3">
+            <div>
+              <label for="claim-status" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">{{ 'backoffice.claims.nextStatus' | t }}</label>
+              <select
+                id="claim-status"
+                [(ngModel)]="statusDraft"
+                class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-colors"
+              >
+                @if (availableStatusTransitions().length === 0) {
+                  <option [ngValue]="c.status">{{ statusLabel(c.status) }}</option>
+                } @else {
+                  @for (status of availableStatusTransitions(); track status) {
+                    <option [ngValue]="status">{{ statusLabel(status) }}</option>
+                  }
+                }
+              </select>
+            </div>
+
+            @if (availableStatusTransitions().length === 0) {
+              <p class="text-xs text-slate-400">{{ 'backoffice.claims.terminalStatus' | t }}</p>
+            } @else {
+              <p class="text-xs text-slate-400">{{ 'backoffice.claims.transitionHint' | t }}</p>
+            }
+
+            <button
+              (click)="onUpdateStatus()"
+              [disabled]="!canSubmitStatus()"
+              class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:from-indigo-500 hover:to-violet-500 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+              {{ statusSaving() ? ('backoffice.claims.updatingStatus' | t) : ('backoffice.claims.updateStatusButton' | t) }}
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-sky-50 border border-sky-200 rounded-2xl p-5">
+          <div class="flex items-center gap-2 mb-4">
+            <svg class="w-4 h-4 text-sky-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487 19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" /></svg>
+            <h2 class="text-xs font-bold text-sky-700 uppercase tracking-widest">{{ 'backoffice.claims.internalNote' | t }}</h2>
+          </div>
+
+          <p class="text-xs text-sky-700/80 mb-3">{{ 'backoffice.claims.internalNoteHint' | t }}</p>
+
+          <textarea
+            id="claim-admin-note"
+            [(ngModel)]="adminNoteDraft"
+            rows="6"
+            class="w-full rounded-xl border border-sky-200 px-3.5 py-2.5 text-sm bg-white text-slate-900 focus:border-sky-400 focus:ring-2 focus:ring-sky-400/20 focus:outline-none transition-colors resize-none"
+            [placeholder]="'backoffice.claims.internalNotePlaceholder' | t"
+          ></textarea>
+
+          <div class="flex items-center justify-end gap-2 mt-3">
+            <button
+              (click)="resetAdminNoteDraft()"
+              class="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer transition-colors"
+            >
+              {{ 'common.reset' | t }}
+            </button>
+            <button
+              (click)="onUpdateAdminNote()"
+              [disabled]="!canSubmitAdminNote()"
+              class="rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-sky-500 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {{ noteSaving() ? ('backoffice.claims.savingNote' | t) : ('backoffice.claims.saveNote' | t) }}
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5">
+          <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">{{ 'backoffice.claims.claimActivity' | t }}</h2>
+          <div class="space-y-3 text-sm">
+            <div class="flex items-center justify-between gap-3">
+              <span class="text-slate-400">{{ 'backoffice.claims.currentStatus' | t }}</span>
+              <app-status-badge [status]="c.status" />
+            </div>
+            <div class="flex items-center justify-between gap-3">
+              <span class="text-slate-400">{{ 'common.created' | t }}</span>
+              <span class="font-medium text-slate-700 text-right">{{ c.createdAt | date:'medium' }}</span>
+            </div>
+            <div class="flex items-center justify-between gap-3">
+              <span class="text-slate-400">{{ 'backoffice.claims.lastUpdated' | t }}</span>
+              <span class="font-medium text-slate-700 text-right">{{ c.updatedAt | date:'medium' }}</span>
+            </div>
+            <div class="flex items-start justify-between gap-3">
+              <span class="text-slate-400">{{ 'backoffice.claims.adminNote' | t }}</span>
+              <span class="font-medium text-slate-700 text-right max-w-[12rem]">{{ c.adminNote || '-' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <app-alert-banner type="error" [message]="'backoffice.claims.claimNotFound' | t" />
+  }
+</div>

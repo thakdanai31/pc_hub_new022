@@ -1,0 +1,364 @@
+<div>
+  <a
+    routerLink="/backoffice/inventory"
+    class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-indigo-600 mb-5 transition-colors group"
+  >
+    <svg class="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+    </svg>
+    {{ 'backoffice.inventory.backToInventory' | t }}
+  </a>
+
+  @if (loading()) {
+    <div class="space-y-4 stagger-children">
+      <div class="flex items-center gap-3">
+        <div class="h-8 w-52 bg-slate-200 rounded-lg shimmer"></div>
+        <div class="h-6 w-20 bg-slate-200 rounded-full shimmer"></div>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div class="lg:col-span-2 space-y-4">
+          <div class="bg-white rounded-2xl border border-slate-200/60 p-5 space-y-3">
+            <div class="h-5 w-40 bg-slate-200 rounded-full shimmer"></div>
+            <div class="h-24 w-full bg-slate-200 rounded-2xl shimmer"></div>
+          </div>
+          <div class="bg-white rounded-2xl border border-slate-200/60 p-5 space-y-3">
+            <div class="h-5 w-32 bg-slate-200 rounded-full shimmer"></div>
+            <div class="h-12 w-full bg-slate-200 rounded-xl shimmer"></div>
+            <div class="h-12 w-full bg-slate-200 rounded-xl shimmer"></div>
+          </div>
+        </div>
+        <div class="space-y-4">
+          <div class="bg-white rounded-2xl border border-slate-200/60 p-5 space-y-3">
+            <div class="h-5 w-24 bg-slate-200 rounded-full shimmer"></div>
+            <div class="h-14 w-full bg-slate-200 rounded-2xl shimmer"></div>
+            <div class="h-10 w-full bg-slate-200 rounded-xl shimmer"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  } @else if (product(); as product) {
+    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
+      <div>
+        <div class="flex items-center gap-3 flex-wrap">
+          <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">{{ product.name }}</h1>
+          <span class="inline-flex items-center px-3 py-1 text-sm font-mono font-bold bg-slate-100 text-slate-700 rounded-xl border border-slate-200">
+            {{ product.sku }}
+          </span>
+          <span class="inline-flex items-center rounded-full px-3 py-1 text-sm font-bold" [class]="stockBadgeClass(product.stock)">
+            {{ 'backoffice.inventory.inStockCount' | t:{count: product.stock} }}
+          </span>
+        </div>
+        <p class="text-xs text-slate-400 mt-1.5">{{ product.category.name }} / {{ product.brand.name }}</p>
+      </div>
+      <div class="text-xs text-slate-400 shrink-0">
+        {{ 'backoffice.inventory.updatedOn' | t:{date: (product.updatedAt | date:'medium')} }}
+      </div>
+    </div>
+
+    @if (successMsg()) {
+      <div class="mb-4">
+        <app-alert-banner type="success" [message]="successMsg()" [dismissible]="true" (dismissed)="successMsg.set('')" />
+      </div>
+    }
+
+    @if (errorMsg()) {
+      <div class="mb-4">
+        <app-alert-banner type="error" [message]="errorMsg()" [dismissible]="true" (dismissed)="errorMsg.set('')" />
+      </div>
+    }
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      <div class="lg:col-span-2 space-y-5">
+        <div class="bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5">
+          <div class="flex items-start gap-4">
+            <div class="w-20 h-20 rounded-2xl overflow-hidden border border-slate-100 shrink-0 bg-slate-50">
+              @if (product.images[0]) {
+                <img [src]="product.images[0].imageUrl" alt="" class="w-full h-full object-cover" />
+              } @else {
+                <div class="w-full h-full flex items-center justify-center">
+                  <svg class="w-8 h-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5a2.25 2.25 0 0 0 2.25-2.25V5.25a2.25 2.25 0 0 0-2.25-2.25H3.75a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 3.75 21Z" /></svg>
+                </div>
+              }
+            </div>
+            <div class="min-w-0 flex-1">
+              <h2 class="text-base font-bold text-slate-900">{{ product.name }}</h2>
+              <p class="text-sm text-slate-500 mt-1 line-clamp-3">{{ product.description }}</p>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 text-sm">
+                <div class="rounded-xl bg-slate-50 px-3 py-2">
+                  <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ 'backoffice.inventory.category' | t }}</p>
+                  <p class="mt-1 font-semibold text-slate-700">{{ product.category.name }}</p>
+                </div>
+                <div class="rounded-xl bg-slate-50 px-3 py-2">
+                  <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ 'backoffice.inventory.brand' | t }}</p>
+                  <p class="mt-1 font-semibold text-slate-700">{{ product.brand.name }}</p>
+                </div>
+                <div class="rounded-xl bg-slate-50 px-3 py-2">
+                  <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ 'backoffice.inventory.warranty' | t }}</p>
+                  <p class="mt-1 font-semibold text-slate-700">
+                    {{ product.warrantyMonths ? ('backoffice.inventory.months' | t:{count: product.warrantyMonths}) : '-' }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 overflow-hidden">
+          <div class="px-5 pt-5 pb-4 border-b border-slate-100">
+            <div class="flex flex-col gap-4">
+              <div class="flex items-center justify-between gap-3">
+                <div>
+                  <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest">{{ 'backoffice.inventory.historyTitle' | t }}</h2>
+                  <p class="text-sm text-slate-500 mt-1">{{ 'backoffice.inventory.historySubtitle' | t }}</p>
+                </div>
+              </div>
+
+              <div class="-mx-1 overflow-x-auto">
+                <div class="flex items-center gap-1 px-1 min-w-max">
+                  @for (tab of typeTabs; track tab.value) {
+                    <button
+                      (click)="onTypeTab(tab.value)"
+                      [class]="typeFilter === tab.value
+                        ? 'px-3.5 py-2 text-xs font-bold rounded-xl bg-indigo-600 text-white shadow-sm shadow-indigo-200 transition-all'
+                        : 'px-3.5 py-2 text-xs font-semibold rounded-xl text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-all cursor-pointer'"
+                    >
+                      {{ tab.labelKey | t }}
+                    </button>
+                  }
+                </div>
+              </div>
+
+              <div class="flex flex-col md:flex-row md:items-end gap-3">
+                <div class="w-full md:w-40">
+                  <label for="detail-reference-id" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">{{ 'backoffice.inventory.referenceId' | t }}</label>
+                  <input
+                    id="detail-reference-id"
+                    type="number"
+                    min="1"
+                    [(ngModel)]="referenceIdFilter"
+                    (ngModelChange)="onHistoryFilterChange()"
+                    [placeholder]="'backoffice.inventory.anyReference' | t"
+                    class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-colors"
+                  />
+                </div>
+
+                @if (hasHistoryFilters()) {
+                  <button
+                    (click)="clearHistoryFilters()"
+                    class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold text-slate-500 hover:text-red-600 rounded-xl hover:bg-red-50 transition-colors cursor-pointer"
+                  >
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                    {{ 'common.clear' | t }}
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
+
+          @if (historyLoading()) {
+            <div class="divide-y divide-slate-100">
+              @for (_ of [1, 2, 3, 4]; track $index) {
+                <div class="px-5 py-4 flex items-center gap-4 stagger-children">
+                  <div class="w-10 h-10 bg-slate-200 rounded-xl shimmer shrink-0"></div>
+                  <div class="flex-1 space-y-2">
+                    <div class="h-3.5 w-32 bg-slate-200 rounded-full shimmer"></div>
+                    <div class="h-3 w-48 bg-slate-200 rounded-full shimmer"></div>
+                  </div>
+                  <div class="h-5 w-16 bg-slate-200 rounded-full shimmer"></div>
+                </div>
+              }
+            </div>
+          } @else if (historyError()) {
+            <div class="p-5">
+              <app-alert-banner type="error" [message]="historyError()">
+                <button
+                  (click)="loadTransactions()"
+                  class="mt-2 inline-flex items-center px-3.5 py-1.5 bg-red-600 text-white rounded-lg text-xs font-semibold hover:bg-red-500 cursor-pointer"
+                >
+                  {{ 'common.retry' | t }}
+                </button>
+              </app-alert-banner>
+            </div>
+          } @else if (transactions().length === 0) {
+            <app-empty-state [title]="'backoffice.inventory.noTransactionsForProduct' | t" [description]="'backoffice.inventory.noTransactionsForProductDesc' | t">
+              <ng-container icon>
+                <svg class="w-10 h-10 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 3.75h18M3 7.5h18m-15 3.75h12a3 3 0 0 1 3 3v2.25a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V14.25a3 3 0 0 1 3-3Zm2.25 3.75h3m6 0h.75v.75H17.25v-.75Z" />
+                </svg>
+              </ng-container>
+            </app-empty-state>
+          } @else {
+            <div class="hidden md:block">
+              <table class="min-w-full divide-y divide-slate-100">
+                <thead>
+                  <tr class="bg-slate-50/80">
+                    <th class="px-5 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ 'backoffice.inventory.transaction' | t }}</th>
+                    <th class="px-5 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ 'backoffice.inventory.type' | t }}</th>
+                    <th class="px-5 py-3.5 text-right text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ 'common.quantity' | t }}</th>
+                    <th class="px-5 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ 'common.reference' | t }}</th>
+                    <th class="px-5 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ 'common.note' | t }}</th>
+                    <th class="px-5 py-3.5 text-right text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ 'backoffice.inventory.createdAt' | t }}</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100/80">
+                  @for (transaction of transactions(); track transaction.id) {
+                    <tr class="hover:bg-slate-50/50 transition-colors">
+                      <td class="px-5 py-3.5">
+                        <span class="text-sm font-bold text-indigo-600 font-mono">#{{ transaction.id }}</span>
+                      </td>
+                      <td class="px-5 py-3.5">
+                        <app-status-badge [status]="transaction.type" />
+                      </td>
+                      <td class="px-5 py-3.5 text-right">
+                        <span class="inline-flex items-center justify-center min-w-16 rounded-full px-2 py-0.5 text-xs font-bold" [class]="quantityClass(transaction)">
+                          {{ formatQuantity(transaction) }}
+                        </span>
+                      </td>
+                      <td class="px-5 py-3.5">
+                        <span class="text-xs text-slate-500 font-mono">
+                          {{ transaction.referenceId ? ('backoffice.inventory.referenceWithId' | t:{id: transaction.referenceId}) : ('common.emptyDash' | t) }}
+                        </span>
+                      </td>
+                      <td class="px-5 py-3.5">
+                        <p class="text-sm text-slate-600 line-clamp-2">{{ transaction.note || ('common.emptyDash' | t) }}</p>
+                      </td>
+                      <td class="px-5 py-3.5 text-right">
+                        <span class="text-xs text-slate-500">{{ transaction.createdAt | date:'mediumDate' }}</span>
+                        <p class="text-[10px] text-slate-400">{{ transaction.createdAt | date:'shortTime' }}</p>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+
+            <div class="md:hidden divide-y divide-slate-100">
+              @for (transaction of transactions(); track transaction.id) {
+                <div class="px-5 py-4">
+                  <div class="flex items-center justify-between gap-3 mb-2">
+                    <div class="flex items-center gap-2 min-w-0">
+                      <span class="text-sm font-bold text-indigo-600 font-mono">#{{ transaction.id }}</span>
+                      <app-status-badge [status]="transaction.type" />
+                    </div>
+                    <span class="inline-flex items-center justify-center min-w-14 rounded-full px-2 py-0.5 text-[10px] font-bold shrink-0" [class]="quantityClass(transaction)">
+                      {{ formatQuantity(transaction) }}
+                    </span>
+                  </div>
+                  <p class="text-[11px] text-slate-500 line-clamp-2">{{ transaction.note || ('common.emptyDash' | t) }}</p>
+                  <div class="flex items-center justify-between text-[10px] text-slate-400 mt-2">
+                    <span>{{ transaction.referenceId ? ('backoffice.inventory.referenceWithId' | t:{id: transaction.referenceId}) : ('backoffice.inventory.noReference' | t) }}</span>
+                    <span>{{ transaction.createdAt | date:'shortDate' }}</span>
+                  </div>
+                </div>
+              }
+            </div>
+
+            @if (pagination(); as pg) {
+              <div class="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-4 border-t border-slate-100">
+                <p class="text-xs font-medium text-slate-400">
+                  {{ 'common.paginationSummary' | t:{page: pg.page, totalPages: pg.totalPages, total: pg.total, entity: ('backoffice.inventory.paginationEntity' | t)} }}
+                </p>
+                <app-pagination [page]="pg.page" [totalPages]="pg.totalPages" (pageChange)="goToPage($event)" />
+              </div>
+            }
+          }
+        </div>
+      </div>
+
+      <div class="space-y-5">
+        <div class="bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5">
+          <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">{{ 'backoffice.inventory.stockSnapshot' | t }}</h2>
+          <div class="rounded-2xl bg-gradient-to-br from-slate-50 to-indigo-50/60 border border-slate-200/70 p-5">
+            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ 'backoffice.inventory.currentStock' | t }}</p>
+            <div class="mt-3 flex items-end justify-between gap-3">
+              <span class="text-4xl font-extrabold text-slate-900">{{ product.stock }}</span>
+              <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold" [class]="stockBadgeClass(product.stock)">
+                {{ stockSummaryLabel(product.stock) }}
+              </span>
+            </div>
+            <p class="text-xs text-slate-500 mt-4">{{ 'backoffice.inventory.stockHelp' | t }}</p>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5">
+          <div class="flex items-center gap-2 mb-4">
+            <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3.75h18M3 7.5h18m-15 3.75h12a3 3 0 0 1 3 3v2.25a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V14.25a3 3 0 0 1 3-3Zm2.25 3.75h3m6 0h.75v.75H17.25v-.75Z" /></svg>
+            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest">{{ 'backoffice.inventory.manualAction' | t }}</h2>
+          </div>
+
+          <div class="mb-4 -mx-1 overflow-x-auto">
+            <div class="flex items-center gap-1 px-1 min-w-max">
+              @for (action of manualActions; track action) {
+                <button
+                  (click)="onActionTab(action)"
+                  [class]="actionType === action
+                    ? 'px-3.5 py-2 text-xs font-bold rounded-xl bg-indigo-600 text-white shadow-sm shadow-indigo-200 transition-all'
+                    : 'px-3.5 py-2 text-xs font-semibold rounded-xl text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-all cursor-pointer'"
+                >
+                  {{ actionLabel(action) }}
+                </button>
+              }
+            </div>
+          </div>
+
+          <p class="text-sm text-slate-500 mb-4">{{ actionMeta().descriptionKey | t }}</p>
+
+          <div class="space-y-3">
+            <div>
+              <label for="inventory-quantity" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">{{ 'common.quantity' | t }}</label>
+              <input
+                id="inventory-quantity"
+                type="number"
+                min="1"
+                [(ngModel)]="quantity"
+                class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-colors"
+              />
+            </div>
+
+            <div>
+              <label for="inventory-action-reference-id" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">{{ 'backoffice.inventory.referenceId' | t }}</label>
+              <input
+                id="inventory-action-reference-id"
+                type="number"
+                min="1"
+                [(ngModel)]="actionReferenceId"
+                [placeholder]="'backoffice.inventory.optionalRelatedRecord' | t"
+                class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-colors"
+              />
+            </div>
+
+            <div>
+              <label for="inventory-note" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">{{ 'common.note' | t }}</label>
+              <textarea
+                id="inventory-note"
+                [(ngModel)]="note"
+                rows="4"
+                [placeholder]="'backoffice.inventory.optionalContext' | t"
+                class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-colors resize-none"
+              ></textarea>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-2">
+              <button
+                (click)="resetActionForm()"
+                class="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer transition-colors"
+              >
+                {{ 'common.reset' | t }}
+              </button>
+              <button
+                (click)="onSubmitAction()"
+                [disabled]="!canSubmitAction()"
+                class="rounded-xl px-4 py-2.5 text-sm font-semibold shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                [class]="actionMeta().buttonClass"
+              >
+                {{ actionSaving() ? ('backoffice.inventory.savingAction' | t) : actionLabel(actionType) }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <app-alert-banner type="error" [message]="'backoffice.inventory.productNotFound' | t" />
+  }
+</div>

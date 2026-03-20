@@ -112,4 +112,19 @@ describe('OrderDetailPage', () => {
     expect(el.textContent).toContain('Order Rejected');
     expect(el.textContent).toContain('Invalid slip');
   });
+
+  it('shows claim action for delivered order items', () => {
+    const fixture = TestBed.createComponent(OrderDetailPage);
+    fixture.detectChanges();
+
+    const deliveredOrder = { ...MOCK_ORDER, status: 'DELIVERED' };
+    const req = httpTesting.expectOne((r) =>
+      r.url.includes('/account/orders/1') && r.method === 'GET' && !r.url.includes('payment') && !r.url.includes('promptpay'),
+    );
+    req.flush({ success: true, message: 'OK', data: deliveredOrder });
+    fixture.detectChanges();
+
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.textContent).toContain('Request Claim');
+  });
 });

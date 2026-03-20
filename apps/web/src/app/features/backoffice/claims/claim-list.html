@@ -1,0 +1,190 @@
+<div>
+  <app-page-header [title]="'backoffice.claims.title' | t" [subtitle]="'backoffice.claims.subtitle' | t">
+    <div actions>
+      <span class="text-xs font-medium text-slate-400">
+        @if (pagination(); as pg) {
+          {{ 'backoffice.claims.totalCount' | t:{count: pg.total} }}
+        }
+      </span>
+    </div>
+  </app-page-header>
+
+  <div class="mb-5 -mx-1 overflow-x-auto">
+    <div class="flex items-center gap-1 px-1 min-w-max">
+      @for (tab of statusTabs; track tab.value) {
+        <button
+          (click)="onStatusTab(tab.value)"
+          [class]="statusFilter === tab.value
+            ? 'px-3.5 py-2 text-xs font-bold rounded-xl bg-indigo-600 text-white shadow-sm shadow-indigo-200 transition-all'
+            : 'px-3.5 py-2 text-xs font-semibold rounded-xl text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-all cursor-pointer'"
+        >
+          {{ tab.labelKey | t }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-4 mb-6">
+    <div class="flex flex-col md:flex-row md:items-end gap-3">
+      <div class="flex-1">
+        <div class="relative">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg>
+          <input
+            id="cl-search"
+            type="text"
+            [(ngModel)]="search"
+            (ngModelChange)="onFilterChange()"
+            [placeholder]="'backoffice.claims.searchPlaceholder' | t"
+            class="w-full rounded-xl border border-slate-200 pl-9 pr-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-colors"
+          />
+        </div>
+      </div>
+
+      @if (hasActiveFilters()) {
+        <button
+          (click)="clearFilters()"
+          class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold text-slate-500 hover:text-red-600 rounded-xl hover:bg-red-50 transition-colors cursor-pointer"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+          {{ 'common.clear' | t }}
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 overflow-hidden">
+      <div class="divide-y divide-slate-100">
+        @for (_ of [1, 2, 3, 4, 5]; track $index) {
+          <div class="px-5 py-4 flex items-center gap-4 stagger-children">
+            <div class="w-9 h-9 bg-slate-200 rounded-full shimmer shrink-0"></div>
+            <div class="flex-1 space-y-2">
+              <div class="h-3.5 w-28 bg-slate-200 rounded-full shimmer"></div>
+              <div class="h-3 w-40 bg-slate-200 rounded-full shimmer"></div>
+            </div>
+            <div class="h-5 w-20 bg-slate-200 rounded-full shimmer"></div>
+            <div class="h-4 w-24 bg-slate-200 rounded-full shimmer"></div>
+          </div>
+        }
+      </div>
+    </div>
+  } @else if (error()) {
+    <app-alert-banner type="error" [message]="error()">
+      <button
+        (click)="loadClaims()"
+        class="mt-2 inline-flex items-center px-3.5 py-1.5 bg-red-600 text-white rounded-lg text-xs font-semibold hover:bg-red-500 cursor-pointer"
+      >
+        {{ 'common.retry' | t }}
+      </button>
+    </app-alert-banner>
+  } @else if (claims().length === 0) {
+    <app-empty-state [title]="'backoffice.claims.emptyTitle' | t" [description]="'backoffice.claims.emptyDescription' | t">
+      <ng-container icon>
+        <svg class="w-10 h-10 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.076-4.076a1.526 1.526 0 0 1 1.037-.443 48.282 48.282 0 0 0 5.68-.494c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
+        </svg>
+      </ng-container>
+    </app-empty-state>
+  } @else {
+    <div class="hidden md:block bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 overflow-hidden">
+      <table class="min-w-full divide-y divide-slate-100">
+        <thead>
+          <tr class="bg-slate-50/80">
+            <th class="px-5 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ 'backoffice.claims.claim' | t }}</th>
+            <th class="px-5 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ 'backoffice.claims.customer' | t }}</th>
+            <th class="px-5 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ 'backoffice.claims.order' | t }}</th>
+            <th class="px-5 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ 'backoffice.claims.product' | t }}</th>
+            <th class="px-5 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ 'common.status' | t }}</th>
+            <th class="px-5 py-3.5 text-right text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ 'common.created' | t }}</th>
+            <th class="px-5 py-3.5 text-right text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ 'common.updated' | t }}</th>
+            <th class="px-5 py-3.5 w-10"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100/80">
+          @for (claim of claims(); track claim.id) {
+            <tr
+              class="hover:bg-indigo-50/30 cursor-pointer transition-colors group"
+              [routerLink]="['/backoffice/claims', claim.id]"
+            >
+              <td class="px-5 py-3.5">
+                <span class="text-sm font-bold text-indigo-600 font-mono group-hover:text-indigo-700 transition-colors">#{{ claim.id }}</span>
+                <p class="text-[10px] text-slate-400 mt-0.5 line-clamp-1">{{ claim.issueDescription }}</p>
+              </td>
+              <td class="px-5 py-3.5">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-8 h-8 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center text-[10px] font-bold text-slate-600 shrink-0">
+                    {{ claim.user.firstName.charAt(0) }}{{ claim.user.lastName.charAt(0) }}
+                  </div>
+                  <div class="min-w-0">
+                    <p class="text-sm font-semibold text-slate-800 truncate">{{ claim.user.firstName }} {{ claim.user.lastName }}</p>
+                    <p class="text-[10px] text-slate-400 truncate">{{ claim.user.email }}</p>
+                  </div>
+                </div>
+              </td>
+              <td class="px-5 py-3.5">
+                <span class="text-sm font-bold text-slate-800">{{ claim.order.orderNumber }}</span>
+                <p class="text-[10px] text-slate-400 mt-0.5">{{ 'backoffice.claims.orderId' | t:{id: claim.orderId} }}</p>
+              </td>
+              <td class="px-5 py-3.5">
+                <p class="text-sm font-semibold text-slate-800 line-clamp-1">{{ claim.product.name }}</p>
+                <p class="text-[10px] text-slate-400 mt-0.5">{{ claim.product.sku }}</p>
+              </td>
+              <td class="px-5 py-3.5">
+                <app-status-badge [status]="claim.status" />
+              </td>
+              <td class="px-5 py-3.5 text-right">
+                <span class="text-xs text-slate-500">{{ claim.createdAt | date:'mediumDate' }}</span>
+                <p class="text-[10px] text-slate-400">{{ claim.createdAt | date:'shortTime' }}</p>
+              </td>
+              <td class="px-5 py-3.5 text-right">
+                <span class="text-xs text-slate-500">{{ claim.updatedAt | date:'mediumDate' }}</span>
+                <p class="text-[10px] text-slate-400">{{ claim.updatedAt | date:'shortTime' }}</p>
+              </td>
+              <td class="px-3 py-3.5">
+                <svg class="w-4 h-4 text-slate-300 group-hover:text-indigo-500 transition-colors" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="md:hidden space-y-3">
+      @for (claim of claims(); track claim.id) {
+        <a
+          [routerLink]="['/backoffice/claims', claim.id]"
+          class="block bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-4 hover:shadow-lg hover:border-indigo-200 transition-all"
+        >
+          <div class="flex items-center justify-between gap-3 mb-3">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="text-sm font-bold text-indigo-600 font-mono shrink-0">#{{ claim.id }}</span>
+              <app-status-badge [status]="claim.status" />
+            </div>
+            <span class="text-[10px] text-slate-400 shrink-0">{{ claim.updatedAt | date:'shortDate' }}</span>
+          </div>
+
+          <div class="space-y-2">
+            <div>
+              <p class="text-xs font-semibold text-slate-800">{{ claim.user.firstName }} {{ claim.user.lastName }}</p>
+              <p class="text-[10px] text-slate-400">{{ claim.user.email }}</p>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-slate-700">{{ claim.product.name }}</p>
+              <p class="text-[10px] text-slate-400">{{ claim.order.orderNumber }} / {{ claim.product.sku }}</p>
+            </div>
+            <p class="text-[11px] text-slate-500 line-clamp-2">{{ claim.issueDescription }}</p>
+          </div>
+        </a>
+      }
+    </div>
+
+    @if (pagination(); as pg) {
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-3 mt-6">
+        <p class="text-xs font-medium text-slate-400">
+          {{ 'common.paginationSummary' | t:{page: pg.page, totalPages: pg.totalPages, total: pg.total, entity: ('backoffice.claims.paginationEntity' | t)} }}
+        </p>
+        <app-pagination [page]="pg.page" [totalPages]="pg.totalPages" (pageChange)="goToPage($event)" />
+      </div>
+    }
+  }
+</div>

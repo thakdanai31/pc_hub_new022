@@ -4,6 +4,10 @@ import { buildPaginationMeta } from '../../common/pagination.js';
 import { env } from '../../config/env.js';
 import { ensureCloudinaryConfigured, uploadImage } from '../../config/cloudinary.js';
 import { logAction } from '../audit/audit.service.js';
+import {
+  commitOrderInventory,
+  restoreOrderInventory,
+} from '../inventory/inventory.service.js';
 import type { OrderListQuery } from './order.schema.js';
 import type { OrderStatus, PaymentMethod } from '../../generated/prisma/client.js';
 
@@ -20,12 +24,55 @@ const ALLOWED_TRANSITIONS: Record<string, string[]> = {
   PAYMENT_SUBMITTED: [],
   PAYMENT_REVIEW: ['APPROVED', 'REJECTED'],
   APPROVED: ['PROCESSING'],
-  PROCESSING: ['SHIPPED'],
+  PROCESSING: ['SHIPPED', 'CANCELLED'],
   SHIPPED: ['DELIVERED'],
   REJECTED: [],
   DELIVERED: [],
   CANCELLED: [],
 };
+
+interface OrderDecisionMetadata {
+  status: OrderStatus;
+  rejectedByUserId?: number | null;
+  rejectedAt: Date | null;
+  rejectReason: string | null;
+  cancelledByUserId?: number | null;
+  cancelledAt: Date | null;
+  cancelReason: string | null;
+}
+
+function resolveRejectionMetadata(order: OrderDecisionMetadata) {
+  if (order.status !== 'REJECTED') {
+    return {
+      rejectedByUserId: null,
+      rejectedAt: null,
+      rejectReason: null,
+    };
+  }
+
+  return {
+    rejectedByUserId: order.rejectedByUserId ?? null,
+    rejectedAt: order.rejectedAt,
+    rejectReason: order.rejectReason,
+  };
+}
+
+function resolveCancellationMetadata(order: OrderDecisionMetadata) {
+  if (order.status === 'CANCELLED') {
+    return {
+      cancelledByUserId:
+        order.cancelledByUserId ?? order.rejectedByUserId ?? null,
+      cancelledAt: order.cancelledAt ?? order.rejectedAt,
+      cancelReason: order.cancelReason ?? order.rejectReason,
+    };
+  }
+
+  return {
+    cancelledByUserId: order.cancelledByUserId ?? null,
+    cancelledAt: order.cancelledAt,
+    cancelReason: order.cancelReason,
+  };
+}
 
 export async function listMyOrders(userId: number, query: OrderListQuery) {
   const where: { userId: number; status?: OrderStatus } = { userId };
@@ -81,6 +128,8 @@ export async function getMyOrder(orderId: number, userId: number) {
       totalAmount: true,
       customerNote: true,
       approvedAt: true,
+      cancelledAt: true,
+      cancelReason: true,
       rejectedAt: true,
       rejectReason: true,
       createdAt: true,
@@ -119,6 +168,9 @@ export async function getMyOrder(orderId: number, userId: number) {
     throw new NotFoundError('Order not found');
   }
 
+  const rejectionMetadata = resolveRejectionMetadata(order);
+  const cancellationMetadata = resolveCancellationMetadata(order);
+
   return {
     id: order.id,
     orderNumber: order.orderNumber,
@@ -130,8 +182,10 @@ export async function getMyOrder(orderId: number, userId: number) {
     totalAmount: Number(order.totalAmount),
     customerNote: order.customerNote,
     approvedAt: order.approvedAt,
-    rejectedAt: order.rejectedAt,
-    rejectReason: order.rejectReason,
+    rejectedAt: rejectionMetadata.rejectedAt,
+    rejectReason: rejectionMetadata.rejectReason,
+    cancelledAt: cancellationMetadata.cancelledAt,
+    cancelReason: cancellationMetadata.cancelReason,
     createdAt: order.createdAt,
     items: order.items.map((item) => ({
       id: item.id,
@@ -399,6 +453,9 @@ export async function getOrderForReview(orderId: number) {
       customerNote: true,
       approvedByUserId: true,
       approvedAt: true,
+      cancelledByUserId: true,
+      cancelledAt: true,
+      cancelReason: true,
       rejectedByUserId: true,
       rejectedAt: true,
       rejectReason: true,
@@ -438,6 +495,9 @@ export async function getOrderForReview(orderId: number) {
     throw new NotFoundError('Order not found');
   }
 
+  const rejectionMetadata = resolveRejectionMetadata(order);
+  const cancellationMetadata = resolveCancellationMetadata(order);
+
   return {
     id: order.id,
     orderNumber: order.orderNumber,
@@ -450,9 +510,12 @@ export async function getOrderForReview(orderId: number) {
     customerNote: order.customerNote,
     approvedByUserId: order.approvedByUserId,
     approvedAt: order.approvedAt,
-    rejectedByUserId: order.rejectedByUserId,
-    rejectedAt: order.rejectedAt,
-    rejectReason: order.rejectReason,
+    rejectedByUserId: rejectionMetadata.rejectedByUserId,
+    rejectedAt: rejectionMetadata.rejectedAt,
+    rejectReason: rejectionMetadata.rejectReason,
+    cancelledByUserId: cancellationMetadata.cancelledByUserId,
+    cancelledAt: cancellationMetadata.cancelledAt,
+    cancelReason: cancellationMetadata.cancelReason,
     createdAt: order.createdAt,
     customer: order.user,
     items: order.items.map((item) => ({
@@ -478,37 +541,31 @@ export async function getOrderForReview(orderId: number) {
   };
 }
 
-async function restoreStock(orderId: number, tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0]) {
-  const items = await tx.orderItem.findMany({
-    where: { orderId },
-    select: { productId: true, quantity: true },
-  });
-
-  for (const item of items) {
-    await tx.product.update({
-      where: { id: item.productId },
-      data: { stock: { increment: item.quantity } },
-    });
-  }
-}
-
 export async function approveOrder(orderId: number, staffUserId: number) {
-  const order = await prisma.order.findUnique({
-    where: { id: orderId },
-    select: { id: true, status: true, paymentMethod: true, payment: { select: { id: true } } },
-  });
-
-  if (!order) {
-    throw new NotFoundError('Order not found');
-  }
-
   const now = new Date();
+  return prisma.$transaction(async (tx) => {
+    const order = await tx.order.findUnique({
+      where: { id: orderId },
+      select: {
+        id: true,
+        status: true,
+        paymentMethod: true,
+        payment: { select: { id: true } },
+      },
+    });
 
-  // COD orders in PENDING -> move to PROCESSING
-  if (order.paymentMethod === 'COD' && order.status === 'PENDING') {
-    await prisma.$transaction(async (tx) => {
-      await tx.order.update({
-        where: { id: orderId },
+    if (!order) {
+      throw new NotFoundError('Order not found');
+    }
+
+    // Inventory is committed only when the order first enters PROCESSING.
+    if (order.paymentMethod === 'COD' && order.status === 'PENDING') {
+      const updated = await tx.order.updateMany({
+        where: {
+          id: orderId,
+          paymentMethod: 'COD',
+          status: 'PENDING',
+        },
         data: {
           status: 'PROCESSING',
           approvedByUserId: staffUserId,
@@ -516,28 +573,51 @@ export async function approveOrder(orderId: number, staffUserId: number) {
         },
       });
 
+      if (updated.count === 0) {
+        throw new AppError(
+          'This order cannot be approved in its current state',
+          400,
+          'INVALID_ORDER_STATUS',
+        );
+      }
+
+      await commitOrderInventory(tx, orderId, staffUserId);
+
       await logAction(tx, {
         actorUserId: staffUserId,
         action: 'ORDER_APPROVE',
         entityType: 'Order',
         entityId: orderId,
-        metadata: { fromStatus: order.status, toStatus: 'PROCESSING', paymentMethod: 'COD' },
+        metadata: {
+          fromStatus: order.status,
+          toStatus: 'PROCESSING',
+          paymentMethod: 'COD',
+        },
       });
-    });
-    return { status: 'PROCESSING' as const };
-  }
+      return { status: 'PROCESSING' as const };
+    }
 
-  // PromptPay orders in PAYMENT_REVIEW -> APPROVED
-  if (order.paymentMethod === 'PROMPTPAY_QR' && order.status === 'PAYMENT_REVIEW') {
-    await prisma.$transaction(async (tx) => {
-      await tx.order.update({
-        where: { id: orderId },
+    if (order.paymentMethod === 'PROMPTPAY_QR' && order.status === 'PAYMENT_REVIEW') {
+      const updated = await tx.order.updateMany({
+        where: {
+          id: orderId,
+          paymentMethod: 'PROMPTPAY_QR',
+          status: 'PAYMENT_REVIEW',
+        },
         data: {
           status: 'APPROVED',
           approvedByUserId: staffUserId,
           approvedAt: now,
         },
       });
+
+      if (updated.count === 0) {
+        throw new AppError(
+          'This order cannot be approved in its current state',
+          400,
+          'INVALID_ORDER_STATUS',
+        );
+      }
 
       if (order.payment) {
         await tx.payment.update({
@@ -555,47 +635,59 @@ export async function approveOrder(orderId: number, staffUserId: number) {
         action: 'ORDER_APPROVE',
         entityType: 'Order',
         entityId: orderId,
-        metadata: { fromStatus: order.status, toStatus: 'APPROVED', paymentMethod: 'PROMPTPAY_QR' },
+        metadata: {
+          fromStatus: order.status,
+          toStatus: 'APPROVED',
+          paymentMethod: 'PROMPTPAY_QR',
+        },
       });
-    });
-    return { status: 'APPROVED' as const };
-  }
+      return { status: 'APPROVED' as const };
+    }
 
-  throw new AppError(
-    'This order cannot be approved in its current state',
-    400,
-    'INVALID_ORDER_STATUS',
-  );
-}
-
-export async function rejectOrder(orderId: number, staffUserId: number, reason: string) {
-  const order = await prisma.order.findUnique({
-    where: { id: orderId },
-    select: { id: true, status: true, paymentMethod: true, payment: { select: { id: true } } },
-  });
-
-  if (!order) {
-    throw new NotFoundError('Order not found');
-  }
-
-  // COD in PENDING or PromptPay in PAYMENT_REVIEW can be rejected
-  const canReject =
-    (order.paymentMethod === 'COD' && order.status === 'PENDING') ||
-    (order.paymentMethod === 'PROMPTPAY_QR' && order.status === 'PAYMENT_REVIEW');
-
-  if (!canReject) {
     throw new AppError(
-      'This order cannot be rejected in its current state',
+      'This order cannot be approved in its current state',
       400,
       'INVALID_ORDER_STATUS',
     );
-  }
+  });
+}
 
+export async function rejectOrder(orderId: number, staffUserId: number, reason: string) {
   const now = new Date();
 
-  await prisma.$transaction(async (tx) => {
-    await tx.order.update({
+  return prisma.$transaction(async (tx) => {
+    const order = await tx.order.findUnique({
       where: { id: orderId },
+      select: {
+        id: true,
+        status: true,
+        paymentMethod: true,
+        payment: { select: { id: true } },
+      },
+    });
+
+    if (!order) {
+      throw new NotFoundError('Order not found');
+    }
+
+    const canReject =
+      (order.paymentMethod === 'COD' && order.status === 'PENDING') ||
+      (order.paymentMethod === 'PROMPTPAY_QR' && order.status === 'PAYMENT_REVIEW');
+
+    if (!canReject) {
+      throw new AppError(
+        'This order cannot be rejected in its current state',
+        400,
+        'INVALID_ORDER_STATUS',
+      );
+    }
+
+    const updated = await tx.order.updateMany({
+      where: {
+        id: orderId,
+        paymentMethod: order.paymentMethod,
+        status: order.status,
+      },
       data: {
         status: 'REJECTED',
         rejectedByUserId: staffUserId,
@@ -603,6 +695,14 @@ export async function rejectOrder(orderId: number, staffUserId: number, reason: 
         rejectReason: reason,
       },
     });
+
+    if (updated.count === 0) {
+      throw new AppError(
+        'This order cannot be rejected in its current state',
+        400,
+        'INVALID_ORDER_STATUS',
+      );
+    }
 
     if (order.payment && order.paymentMethod === 'PROMPTPAY_QR') {
       await tx.payment.update({
@@ -616,9 +716,6 @@ export async function rejectOrder(orderId: number, staffUserId: number, reason: 
       });
     }
 
-    // Restore stock
-    await restoreStock(orderId, tx);
-
     await logAction(tx, {
       actorUserId: staffUserId,
       action: 'ORDER_REJECT',
@@ -626,48 +723,130 @@ export async function rejectOrder(orderId: number, staffUserId: number, reason: 
       entityId: orderId,
       metadata: { fromStatus: order.status, reason },
     });
+    return { status: 'REJECTED' as const };
   });
+}
 
-  return { status: 'REJECTED' as const };
+export async function cancelOrder(orderId: number, staffUserId: number, reason: string) {
+  const now = new Date();
+
+  return prisma.$transaction(async (tx) => {
+    const order = await tx.order.findUnique({
+      where: { id: orderId },
+      select: {
+        id: true,
+        status: true,
+      },
+    });
+
+    if (!order) {
+      throw new NotFoundError('Order not found');
+    }
+
+    if (order.status !== 'PROCESSING') {
+      throw new AppError(
+        'This order cannot be cancelled in its current state',
+        400,
+        'INVALID_ORDER_STATUS',
+      );
+    }
+
+    const updated = await tx.order.updateMany({
+      where: {
+        id: orderId,
+        status: 'PROCESSING',
+      },
+      data: {
+        status: 'CANCELLED',
+        cancelledByUserId: staffUserId,
+        cancelledAt: now,
+        cancelReason: reason,
+      },
+    });
+
+    if (updated.count === 0) {
+      throw new AppError(
+        'This order cannot be cancelled in its current state',
+        400,
+        'INVALID_ORDER_STATUS',
+      );
+    }
+
+    await restoreOrderInventory(tx, orderId, staffUserId);
+
+    await logAction(tx, {
+      actorUserId: staffUserId,
+      action: 'ORDER_CANCEL',
+      entityType: 'Order',
+      entityId: orderId,
+      metadata: { fromStatus: order.status, reason },
+    });
+    return { status: 'CANCELLED' as const };
+  });
 }
 
 export async function advanceOrderStatus(orderId: number, newStatus: string, staffUserId: number) {
-  const order = await prisma.order.findUnique({
-    where: { id: orderId },
-    select: { id: true, status: true, paymentMethod: true, payment: { select: { id: true, status: true } } },
-  });
-
-  if (!order) {
-    throw new NotFoundError('Order not found');
-  }
-
-  const allowed = ALLOWED_TRANSITIONS[order.status];
-  if (!allowed || !allowed.includes(newStatus)) {
-    throw new AppError(
-      `Cannot transition from ${order.status} to ${newStatus}`,
-      400,
-      'INVALID_STATUS_TRANSITION',
-    );
-  }
-
-  // Only allow PROCESSING, SHIPPED, DELIVERED through this endpoint
-  // APPROVED/REJECTED are handled by approve/reject endpoints
-  const advanceable = ['PROCESSING', 'SHIPPED', 'DELIVERED'];
-  if (!advanceable.includes(newStatus)) {
-    throw new AppError(
-      `Use the appropriate endpoint for ${newStatus} transitions`,
-      400,
-      'INVALID_STATUS_TRANSITION',
-    );
-  }
-
-  await prisma.$transaction(async (tx) => {
-    await tx.order.update({
+  return prisma.$transaction(async (tx) => {
+    const order = await tx.order.findUnique({
       where: { id: orderId },
+      select: {
+        id: true,
+        status: true,
+        paymentMethod: true,
+        payment: { select: { id: true, status: true } },
+      },
+    });
+
+    if (!order) {
+      throw new NotFoundError('Order not found');
+    }
+
+    const allowed = ALLOWED_TRANSITIONS[order.status];
+    if (!allowed || !allowed.includes(newStatus)) {
+      throw new AppError(
+        `Cannot transition from ${order.status} to ${newStatus}`,
+        400,
+        'INVALID_STATUS_TRANSITION',
+      );
+    }
+
+    const advanceable = ['PROCESSING', 'SHIPPED', 'DELIVERED'];
+    if (!advanceable.includes(newStatus)) {
+      throw new AppError(
+        `Use the appropriate endpoint for ${newStatus} transitions`,
+        400,
+        'INVALID_STATUS_TRANSITION',
+      );
+    }
+
+    if (newStatus === 'PROCESSING' && order.status !== 'APPROVED') {
+      throw new AppError(
+        'Use the approval endpoint to move this order to processing',
+        400,
+        'INVALID_STATUS_TRANSITION',
+      );
+    }
+
+    const updated = await tx.order.updateMany({
+      where: {
+        id: orderId,
+        status: order.status,
+      },
       data: { status: newStatus as OrderStatus },
     });
 
-    // COD orders: mark payment as PAID when delivered
+    if (updated.count === 0) {
+      throw new AppError(
+        `Cannot transition from ${order.status} to ${newStatus}`,
+        400,
+        'INVALID_STATUS_TRANSITION',
+      );
+    }
+
+    if (newStatus === 'PROCESSING') {
+      await commitOrderInventory(tx, orderId, staffUserId);
+    }
+
     if (newStatus === 'DELIVERED' && order.paymentMethod === 'COD' && order.payment) {
       await tx.payment.update({
         where: { id: order.payment.id },
@@ -682,7 +861,7 @@ export async function advanceOrderStatus(orderId: number, newStatus: string, sta
       entityId: orderId,
       metadata: { fromStatus: order.status, toStatus: newStatus },
     });
-  });
 
-  return { status: newStatus };
+    return { status: newStatus };
+  });
 }

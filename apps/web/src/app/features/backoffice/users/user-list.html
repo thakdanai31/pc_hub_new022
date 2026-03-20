@@ -1,5 +1,5 @@
 <div>
-  <app-page-header title="User Management" subtitle="Manage staff and admin accounts">
+  <app-page-header [title]="'backoffice.users.title' | t" [subtitle]="'backoffice.users.subtitle' | t">
     <ng-container actions>
       <div class="flex gap-2">
         <a
@@ -7,20 +7,19 @@
           class="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-indigo-600/20 hover:from-indigo-500 hover:to-violet-500 transition-all duration-200"
         >
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-          Staff
+          {{ 'backoffice.users.addStaff' | t }}
         </a>
         <a
           routerLink="/backoffice/users/new/admin"
           class="inline-flex items-center gap-1.5 rounded-xl bg-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-700 transition-colors"
         >
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-          Admin
+          {{ 'backoffice.users.addAdmin' | t }}
         </a>
       </div>
     </ng-container>
   </app-page-header>
 
-  <!-- Filters -->
   <div class="bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-4 mb-6">
     <div class="flex flex-col md:flex-row md:items-end gap-3">
       <div class="flex-1">
@@ -31,7 +30,7 @@
             type="text"
             [(ngModel)]="search"
             (ngModelChange)="onFilterChange()"
-            placeholder="Search by name or email..."
+            [placeholder]="'backoffice.users.searchPlaceholder' | t"
             class="w-full rounded-xl border border-slate-200 pl-9 pr-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-colors"
           />
         </div>
@@ -43,13 +42,26 @@
           (ngModelChange)="onFilterChange()"
           class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-colors"
         >
-          <option value="">All Roles</option>
-          <option value="STAFF">Staff</option>
-          <option value="ADMIN">Admin</option>
+          <option value="">{{ 'backoffice.users.allRoles' | t }}</option>
+          <option value="CUSTOMER">{{ 'enum.CUSTOMER' | t }}</option>
+          <option value="STAFF">{{ 'enum.STAFF' | t }}</option>
+          <option value="ADMIN">{{ 'enum.ADMIN' | t }}</option>
         </select>
       </div>
     </div>
   </div>
+
+  @if (actionSuccess()) {
+    <div class="mb-6">
+      <app-alert-banner type="success" [message]="actionSuccess()" />
+    </div>
+  }
+
+  @if (actionError()) {
+    <div class="mb-6">
+      <app-alert-banner type="error" [message]="actionError()" />
+    </div>
+  }
 
   @if (loading()) {
     <div class="bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 overflow-hidden">
@@ -72,11 +84,11 @@
         (click)="loadUsers()"
         class="mt-2 inline-flex items-center px-3.5 py-1.5 bg-red-600 text-white rounded-lg text-xs font-semibold hover:bg-red-500 cursor-pointer"
       >
-        Retry
+        {{ 'common.retry' | t }}
       </button>
     </app-alert-banner>
   } @else if (users().length === 0) {
-    <app-empty-state title="No users found" description="Try adjusting your filters.">
+    <app-empty-state [title]="'backoffice.users.emptyTitle' | t" [description]="'backoffice.users.emptyDescription' | t">
       <ng-container icon>
         <svg class="w-10 h-10 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
@@ -88,12 +100,12 @@
       <table class="min-w-full divide-y divide-slate-100">
         <thead>
           <tr class="bg-slate-50/80">
-            <th class="px-5 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">User</th>
-            <th class="px-5 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest hidden md:table-cell">Phone</th>
-            <th class="px-5 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Role</th>
-            <th class="px-5 py-3.5 text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status</th>
-            <th class="px-5 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest hidden lg:table-cell">Joined</th>
-            <th class="px-5 py-3.5 w-24"></th>
+            <th class="px-5 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ 'backoffice.users.user' | t }}</th>
+            <th class="px-5 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest hidden md:table-cell">{{ 'backoffice.users.phone' | t }}</th>
+            <th class="px-5 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ 'backoffice.users.role' | t }}</th>
+            <th class="px-5 py-3.5 text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ 'common.status' | t }}</th>
+            <th class="px-5 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest hidden lg:table-cell">{{ 'backoffice.users.joined' | t }}</th>
+            <th class="px-5 py-3.5 w-64"></th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-100/80">
@@ -101,13 +113,29 @@
             <tr class="hover:bg-indigo-50/30 transition-colors group">
               <td class="px-5 py-3.5">
                 <div class="flex items-center gap-2.5">
-                  <div class="w-9 h-9 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0"
-                    [class]="user.role === 'ADMIN' ? 'bg-gradient-to-br from-purple-100 to-violet-100 text-purple-700' : 'bg-gradient-to-br from-indigo-100 to-sky-100 text-indigo-700'">
+                  <div
+                    class="w-9 h-9 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0"
+                    [class]="
+                      isAdmin(user)
+                        ? 'bg-gradient-to-br from-purple-100 to-violet-100 text-purple-700'
+                        : isCustomer(user)
+                          ? 'bg-gradient-to-br from-amber-100 to-orange-100 text-amber-700'
+                          : 'bg-gradient-to-br from-indigo-100 to-sky-100 text-indigo-700'
+                    "
+                  >
                     {{ user.firstName.charAt(0) }}{{ user.lastName.charAt(0) }}
                   </div>
                   <div class="min-w-0">
                     <p class="text-sm font-semibold text-slate-800 truncate">{{ user.firstName }} {{ user.lastName }}</p>
                     <p class="text-[10px] text-slate-400 truncate">{{ user.email }}</p>
+                    @if (!user.isActive && user.bannedUntil) {
+                      <p class="text-[10px] font-medium text-amber-700 truncate">{{ 'backoffice.users.until' | t:{date: (user.bannedUntil | date:'medium')} }}</p>
+                    } @else if (!user.isActive) {
+                      <p class="text-[10px] font-medium text-red-700 truncate">{{ 'backoffice.users.permanentBan' | t }}</p>
+                    }
+                    @if (!user.isActive && user.banReason) {
+                      <p class="text-[10px] text-slate-500 truncate">{{ 'backoffice.users.reason' | t:{reason: user.banReason} }}</p>
+                    }
                   </div>
                 </div>
               </td>
@@ -115,52 +143,78 @@
               <td class="px-5 py-3.5">
                 <span
                   class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded-lg"
-                  [class]="user.role === 'ADMIN' ? 'bg-purple-50 text-purple-700' : 'bg-indigo-50 text-indigo-700'"
+                  [class]="
+                    isAdmin(user)
+                      ? 'bg-purple-50 text-purple-700'
+                      : isCustomer(user)
+                        ? 'bg-amber-50 text-amber-700'
+                        : 'bg-indigo-50 text-indigo-700'
+                  "
                 >
-                  {{ user.role }}
+                  {{ ('enum.' + user.role) | t }}
                 </span>
               </td>
               <td class="px-5 py-3.5 text-center">
                 <span
                   class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full"
-                  [class]="user.isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'"
+                  [class]="userStatusClass(user)"
                 >
-                  <span class="w-1.5 h-1.5 rounded-full" [class]="user.isActive ? 'bg-emerald-500' : 'bg-red-500'"></span>
-                  {{ user.isActive ? 'Active' : 'Disabled' }}
+                  <span class="w-1.5 h-1.5 rounded-full" [class]="userStatusDotClass(user)"></span>
+                  {{ userStatusLabel(user) }}
                 </span>
               </td>
               <td class="px-5 py-3.5 hidden lg:table-cell">
                 <span class="text-xs text-slate-400">{{ user.createdAt | date:'mediumDate' }}</span>
+                @if (!user.isActive && user.bannedAt) {
+                  <p class="text-[10px] text-slate-400 mt-1">{{ 'backoffice.users.bannedOn' | t:{date: (user.bannedAt | date:'mediumDate')} }}</p>
+                }
               </td>
               <td class="px-5 py-3.5">
-                <div class="flex items-center justify-end gap-1">
-                  <button
-                    (click)="onStartEdit(user)"
-                    class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 cursor-pointer transition-colors"
-                    title="Edit"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" /></svg>
-                  </button>
-                  @if (user.isActive && user.id !== currentUserId()) {
+                <div class="flex flex-wrap items-center justify-end gap-2">
+                  @if (canEdit(user)) {
                     <button
-                      (click)="confirmDisable(user)"
-                      class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-red-600 hover:bg-red-50 cursor-pointer transition-colors"
-                      title="Disable"
+                      (click)="onStartEdit(user)"
+                      class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:bg-indigo-50 hover:text-indigo-700 cursor-pointer transition-colors"
                     >
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" /></svg>
+                      {{ 'backoffice.users.edit' | t }}
+                    </button>
+                  }
+
+                  @if (canChangeStatus(user) && user.isActive) {
+                    <button
+                      (click)="startBan(user, 'permanent')"
+                      [disabled]="actionSaving()"
+                      class="inline-flex items-center rounded-lg bg-red-50 px-2.5 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100 cursor-pointer transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {{ 'backoffice.users.banPermanently' | t }}
+                    </button>
+                    <button
+                      (click)="startBan(user, 'temporary')"
+                      [disabled]="actionSaving()"
+                      class="inline-flex items-center rounded-lg bg-amber-50 px-2.5 py-1.5 text-xs font-semibold text-amber-700 hover:bg-amber-100 cursor-pointer transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {{ 'backoffice.users.banUntil' | t }}
+                    </button>
+                  } @else if (canChangeStatus(user)) {
+                    <button
+                      (click)="confirmUnban(user)"
+                      [disabled]="actionSaving()"
+                      class="inline-flex items-center rounded-lg bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 cursor-pointer transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {{ 'backoffice.users.unban' | t }}
                     </button>
                   }
                 </div>
               </td>
             </tr>
 
-            <!-- Inline edit row -->
-            @if (editingUserId() === user.id) {
+            @if (showInlineEdit(user)) {
               <tr class="bg-indigo-50/30">
                 <td colspan="6" class="px-5 py-4">
                   <div class="flex flex-wrap items-end gap-3">
                     <div>
-                      <label [for]="'edit-fn-' + user.id" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">First Name</label>
+                      <label [for]="'edit-fn-' + user.id" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{{ 'backoffice.users.firstName' | t }}</label>
                       <input
                         [id]="'edit-fn-' + user.id"
                         type="text"
@@ -169,7 +223,7 @@
                       />
                     </div>
                     <div>
-                      <label [for]="'edit-ln-' + user.id" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Last Name</label>
+                      <label [for]="'edit-ln-' + user.id" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{{ 'backoffice.users.lastName' | t }}</label>
                       <input
                         [id]="'edit-ln-' + user.id"
                         type="text"
@@ -178,7 +232,7 @@
                       />
                     </div>
                     <div>
-                      <label [for]="'edit-ph-' + user.id" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Phone</label>
+                      <label [for]="'edit-ph-' + user.id" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{{ 'backoffice.users.phone' | t }}</label>
                       <input
                         [id]="'edit-ph-' + user.id"
                         type="text"
@@ -191,18 +245,78 @@
                       [disabled]="editSaving()"
                       class="rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:from-indigo-500 hover:to-violet-500 cursor-pointer disabled:opacity-50 transition-all"
                     >
-                      Save
+                      {{ 'common.save' | t }}
                     </button>
                     <button
-                      (click)="editingUserId.set(null)"
+                      (click)="cancelEdit()"
                       class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer transition-colors"
                     >
-                      Cancel
+                      {{ 'common.cancel' | t }}
                     </button>
                     @if (editError()) {
                       <span class="text-xs text-red-600">{{ editError() }}</span>
                     }
                   </div>
+                </td>
+              </tr>
+            }
+
+            @if (showBanForm(user)) {
+              <tr class="bg-red-50/40">
+                <td colspan="6" class="px-5 py-4">
+                  <div class="flex flex-col gap-3 lg:flex-row lg:items-end">
+                    <div class="lg:w-44">
+                      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{{ 'backoffice.users.banMode' | t }}</p>
+                      <div class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700">
+                        {{ banMode() === 'temporary' ? ('backoffice.users.temporaryBan' | t) : ('backoffice.users.permanentBan' | t) }}
+                      </div>
+                    </div>
+
+                    @if (banMode() === 'temporary') {
+                      <div class="lg:w-64">
+                        <label for="ban-until" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{{ 'backoffice.users.bannedUntil' | t }}</label>
+                        <input
+                          id="ban-until"
+                          type="datetime-local"
+                          [(ngModel)]="banForm.bannedUntil"
+                          [min]="minimumBanDateTime()"
+                          class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-colors"
+                        />
+                      </div>
+                    }
+
+                    <div class="flex-1">
+                      <label for="ban-reason" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{{ 'backoffice.users.banReason' | t }}</label>
+                      <input
+                        id="ban-reason"
+                        type="text"
+                        [(ngModel)]="banForm.banReason"
+                        maxlength="500"
+                        [placeholder]="'backoffice.users.banReasonPlaceholder' | t"
+                        class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                      <button
+                        (click)="submitBan()"
+                        [disabled]="actionSaving()"
+                        class="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 cursor-pointer disabled:opacity-50 transition-colors"
+                      >
+                        {{ banMode() === 'temporary' ? ('backoffice.users.banUntil' | t) : ('backoffice.users.banPermanently' | t) }}
+                      </button>
+                      <button
+                        (click)="cancelBan()"
+                        class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer transition-colors"
+                      >
+                        {{ 'common.cancel' | t }}
+                      </button>
+                    </div>
+                  </div>
+
+                  @if (banError()) {
+                    <p class="mt-3 text-xs font-medium text-red-600">{{ banError() }}</p>
+                  }
                 </td>
               </tr>
             }
@@ -214,9 +328,7 @@
     @if (pagination(); as pg) {
       <div class="flex flex-col sm:flex-row items-center justify-between gap-3 mt-6">
         <p class="text-xs font-medium text-slate-400">
-          Showing page <span class="font-bold text-slate-600">{{ pg.page }}</span> of <span class="font-bold text-slate-600">{{ pg.totalPages }}</span>
-          <span class="text-slate-300 mx-1">·</span>
-          {{ pg.total }} users
+          {{ 'common.paginationSummary' | t:{page: pg.page, totalPages: pg.totalPages, total: pg.total, entity: ('backoffice.users.paginationEntity' | t)} }}
         </p>
         <app-pagination [page]="pg.page" [totalPages]="pg.totalPages" (pageChange)="goToPage($event)" />
       </div>
@@ -224,11 +336,11 @@
   }
 
   <app-confirm-dialog
-    #disableDialog
-    title="Disable User"
-    message="Are you sure you want to disable this user? They will no longer be able to log in."
-    confirmLabel="Disable"
-    [destructive]="true"
-    (confirmed)="onDisableConfirmed()"
+    #statusDialog
+    [title]="statusDialogTitle()"
+    [message]="statusDialogMessage()"
+    [confirmLabel]="statusDialogConfirmLabel()"
+    [destructive]="statusDialogDestructive()"
+    (confirmed)="onStatusChangeConfirmed()"
   />
 </div>

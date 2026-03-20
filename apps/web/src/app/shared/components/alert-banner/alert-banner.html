@@ -47,7 +47,7 @@
       <button
         (click)="dismiss()"
         class="shrink-0 rounded-lg p-2 hover:bg-white/20 cursor-pointer transition-colors"
-        aria-label="Dismiss"
+        [attr.aria-label]="'common.dismiss' | t"
       >
         <svg class="w-4 h-4 opacity-70" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />

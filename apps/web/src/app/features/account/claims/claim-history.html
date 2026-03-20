@@ -1,0 +1,119 @@
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+  <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8 animate-fade-up">
+    <div>
+      <h1 class="text-heading text-2xl sm:text-3xl text-slate-900">{{ 'storefront.claims.history.title' | t }}</h1>
+      @if (!loading() && pagination(); as p) {
+        <p class="mt-1.5 text-sm text-slate-500">
+          <span class="font-semibold text-indigo-600">{{ p.total }}</span>
+          {{ 'storefront.claims.history.totalCount' | t:{count: p.total} }}
+        </p>
+      }
+    </div>
+    <div>
+      <label for="claim-status-filter" class="block text-xs font-semibold text-slate-600 mb-2">{{ 'storefront.claims.history.filter' | t }}</label>
+      <select
+        id="claim-status-filter"
+        [ngModel]="statusFilter()"
+        (ngModelChange)="onFilterChange($event)"
+        class="rounded-xl border border-slate-300/80 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-700 focus:bg-white focus:border-indigo-500 focus:outline-none transition-all"
+      >
+        <option value="">{{ 'common.all' | t }}</option>
+        <option value="PENDING">{{ 'enum.PENDING' | t }}</option>
+        <option value="IN_REVIEW">{{ 'enum.IN_REVIEW' | t }}</option>
+        <option value="SENT_TO_MANUFACTURER">{{ 'enum.SENT_TO_MANUFACTURER' | t }}</option>
+        <option value="COMPLETED">{{ 'enum.COMPLETED' | t }}</option>
+        <option value="REJECTED">{{ 'enum.REJECTED' | t }}</option>
+      </select>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="space-y-3">
+      @for (_ of [1, 2, 3]; track $index) {
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-5">
+          <div class="flex justify-between gap-4">
+            <div class="space-y-2.5">
+              <div class="h-4 bg-slate-200 rounded-full w-32 shimmer"></div>
+              <div class="h-3 bg-slate-200 rounded-full w-48 shimmer"></div>
+              <div class="h-3 bg-slate-200 rounded-full w-56 shimmer"></div>
+            </div>
+            <div class="space-y-2.5 text-right">
+              <div class="h-5 bg-slate-200 rounded-full w-24 ml-auto shimmer"></div>
+              <div class="h-4 bg-slate-200 rounded-full w-20 ml-auto shimmer"></div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  } @else if (error()) {
+    <div class="bg-white rounded-2xl shadow-md border border-slate-200/60 p-10 text-center">
+      <app-alert-banner type="error" [message]="error()" />
+      <div class="mt-5">
+        <button (click)="goToPage(1)" class="btn-secondary rounded-xl px-5 py-2.5 text-sm cursor-pointer">{{ 'common.retry' | t }}</button>
+      </div>
+    </div>
+  } @else if (claims().length === 0) {
+    <div class="bg-white rounded-2xl shadow-md border border-slate-200/60">
+      <app-empty-state
+        [title]="'storefront.claims.history.emptyTitle' | t"
+        [description]="statusFilter() ? ('storefront.claims.history.emptyFiltered' | t) : ('storefront.claims.history.emptyDefault' | t)"
+      >
+        <div icon>
+          <svg class="mx-auto h-12 w-12 text-slate-300" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-8.25 8.625h14.25A2.25 2.25 0 0 0 20.25 17.625V6.375A2.25 2.25 0 0 0 18 4.125H6A2.25 2.25 0 0 0 3.75 6.375v11.25A2.25 2.25 0 0 0 6 19.875Z" />
+          </svg>
+        </div>
+        <a
+          routerLink="/account/orders"
+          class="btn-primary rounded-xl px-5 py-2.5 text-sm mt-4 inline-flex"
+        >
+          {{ 'storefront.claims.history.viewOrders' | t }}
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" /></svg>
+        </a>
+      </app-empty-state>
+    </div>
+  } @else {
+    <div class="space-y-2.5">
+      @for (claim of claims(); track claim.id) {
+        <a
+          [routerLink]="['/account/claims', claim.id]"
+          class="group block bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5 hover:border-indigo-200/50 hover:shadow-lg hover:shadow-indigo-100/30 hover:-translate-y-0.5 transition-all duration-300"
+        >
+          <div class="flex items-start justify-between gap-4">
+            <div class="min-w-0">
+              <div class="flex items-center gap-3 flex-wrap">
+                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">{{ 'storefront.claims.history.requestLabel' | t }}</p>
+                <app-status-badge [status]="claim.status" />
+              </div>
+              <p class="mt-2 text-sm font-semibold text-slate-900 leading-snug">{{ claim.product.name }}</p>
+              <div class="flex flex-wrap items-center gap-2 mt-1.5 text-xs text-slate-400">
+                <span>{{ claim.order.orderNumber }}</span>
+                <span class="text-slate-200">/</span>
+                <span>{{ claim.createdAt | date:'mediumDate' }}</span>
+                <span class="text-slate-200">/</span>
+                <span>{{ 'storefront.claims.history.updatedOn' | t:{date: (claim.updatedAt | date:'shortDate')} }}</span>
+              </div>
+              <p class="mt-3 text-sm text-slate-600 leading-relaxed">{{ previewIssue(claim.issueDescription) }}</p>
+            </div>
+            <svg
+              class="w-4 h-4 text-slate-300 group-hover:text-indigo-400 group-hover:translate-x-0.5 transition-all duration-200 shrink-0 mt-1"
+              fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+            </svg>
+          </div>
+        </a>
+      }
+    </div>
+
+    @if (pagination(); as p) {
+      @if (p.totalPages > 1) {
+        <app-pagination
+          [page]="p.page"
+          [totalPages]="p.totalPages"
+          (pageChange)="goToPage($event)"
+        />
+      }
+    }
+  }
+</div>

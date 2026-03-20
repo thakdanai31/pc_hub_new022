@@ -40,6 +40,8 @@ let brandId: number;
 let productId: number;
 
 async function cleanDatabase() {
+  await prisma.claim.deleteMany();
+  await prisma.inventoryTransaction.deleteMany();
   await prisma.paymentSlip.deleteMany();
   await prisma.payment.deleteMany();
   await prisma.cartItem.deleteMany();
@@ -175,6 +177,7 @@ describe('Audit regression — order operations', () => {
   let orderId: number;
 
   beforeEach(async () => {
+    await prisma.inventoryTransaction.deleteMany();
     await prisma.paymentSlip.deleteMany();
     await prisma.payment.deleteMany();
     await prisma.orderItem.deleteMany();
@@ -286,10 +289,15 @@ describe('Audit regression — user management', () => {
 
     const userId = createRes.body.data.id as number;
     await prisma.auditLog.deleteMany(); // clear create log
+    const bannedUntil = new Date(Date.now() + 60 * 60 * 1000).toISOString();
 
     const res = await request(app)
       .post(`/api/v1/backoffice/users/${userId}/disable`)
-      .set('Authorization', `Bearer ${adminToken}`);
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        bannedUntil,
+        banReason: 'Audit suspension',
+      });
 
     expect(res.status).toBe(200);
 
@@ -299,5 +307,81 @@ describe('Audit regression — user management', () => {
     expect(log).not.toBeNull();
     expect(log!.entityId).toBe(userId);
     expect(log!.entityType).toBe('User');
+    const metadata = log!.metadata as Record<string, unknown>;
+    expect(metadata['banReason']).toBe('Audit suspension');
+    expect(metadata['bannedUntil']).toBeTruthy();
+  });
+
+  it('admin enable user logs USER_ENABLE', async () => {
+    const createRes = await request(app)
+      .post('/api/v1/backoffice/users/staff')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        firstName: 'ToEnable',
+        lastName: 'Audit',
+        email: 'toenable-audit@test.com',
+        phoneNumber: '0899990003',
+        password: 'password123',
+      });
+
+    const userId = createRes.body.data.id as number;
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { isActive: false },
+    });
+    await prisma.auditLog.deleteMany();
+
+    const res = await request(app)
+      .post(`/api/v1/backoffice/users/${userId}/enable`)
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+
+    const log = await prisma.auditLog.findFirst({
+      where: { action: 'USER_ENABLE' },
+    });
+    expect(log).not.toBeNull();
+    expect(log!.entityId).toBe(userId);
+    expect(log!.entityType).toBe('User');
+  });
+
+  it('expired temporary ban logs USER_AUTO_ENABLE on the next protected request', async () => {
+    const reg = await request(app).post('/api/v1/auth/register').send({
+      firstName: 'Auto',
+      lastName: 'Enable',
+      phoneNumber: '0899990004',
+      email: 'autoenable-audit@test.com',
+      password: 'password123',
+    });
+
+    const userId = getBodyNumber(reg, 'data', 'user', 'id');
+    const accessToken = getBodyString(reg, 'data', 'accessToken');
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        isActive: false,
+        bannedUntil: new Date(Date.now() - 60 * 1000),
+        banReason: 'Expired audit hold',
+        bannedAt: new Date(Date.now() - 2 * 60 * 1000),
+        bannedByUserId: adminUserId,
+      },
+    });
+    await prisma.auditLog.deleteMany();
+
+    const res = await request(app)
+      .get('/api/v1/auth/me')
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    expect(res.status).toBe(200);
+
+    const log = await prisma.auditLog.findFirst({
+      where: { action: 'USER_AUTO_ENABLE' },
+    });
+    expect(log).not.toBeNull();
+    expect(log!.entityId).toBe(userId);
+    expect(log!.entityType).toBe('User');
+    expect(log!.actorUserId).toBe(userId);
   });
 });

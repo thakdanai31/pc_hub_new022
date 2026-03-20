@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import request from 'supertest';
 import { prisma } from '../src/config/database.js';
+import { getUniqueTestPhoneNumber } from './helpers.js';
 
 // Mock cloudinary before importing app
 vi.mock('cloudinary', () => {
@@ -63,7 +64,7 @@ async function registerAndGetToken(
     firstName: role,
     lastName: 'User',
     email,
-    phoneNumber: '0800000000',
+    phoneNumber: getUniqueTestPhoneNumber(),
     password: 'Password123!',
     confirmPassword: 'Password123!',
   });

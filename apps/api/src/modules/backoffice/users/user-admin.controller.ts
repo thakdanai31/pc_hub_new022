@@ -5,6 +5,7 @@ import {
   userListQuerySchema,
   createPrivilegedUserSchema,
   updateUserSchema,
+  disableUserSchema,
   userIdParamSchema,
 } from './user-admin.schema.js';
 import * as userAdminService from './user-admin.service.js';
@@ -42,6 +43,13 @@ export async function updateUser(req: Request, res: Response) {
 
 export async function disableUser(req: Request, res: Response) {
   const { userId } = userIdParamSchema.parse(req.params);
-  const user = await userAdminService.disableUser(userId, getAuthUser(req).userId);
+  const body = disableUserSchema.parse(req.body ?? {});
+  const user = await userAdminService.disableUser(userId, getAuthUser(req).userId, body);
   sendSuccess({ res, message: 'User disabled', data: user });
+}
+
+export async function enableUser(req: Request, res: Response) {
+  const { userId } = userIdParamSchema.parse(req.params);
+  const user = await userAdminService.enableUser(userId, getAuthUser(req).userId);
+  sendSuccess({ res, message: 'User enabled', data: user });
 }

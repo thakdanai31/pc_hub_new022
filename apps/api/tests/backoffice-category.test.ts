@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
 import { app } from '../src/app.js';
 import { prisma } from '../src/config/database.js';
+import { getUniqueTestPhoneNumber } from './helpers.js';
 
 let adminToken: string;
 let staffToken: string;
@@ -26,7 +27,7 @@ async function registerAndGetToken(
     firstName: role,
     lastName: 'User',
     email,
-    phoneNumber: '0800000000',
+    phoneNumber: getUniqueTestPhoneNumber(),
     password: 'Password123!',
     confirmPassword: 'Password123!',
   });

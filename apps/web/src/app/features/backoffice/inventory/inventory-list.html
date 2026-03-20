@@ -1,0 +1,196 @@
+<div>
+  <app-page-header [title]="'backoffice.inventory.title' | t" [subtitle]="'backoffice.inventory.subtitle' | t">
+    <div actions>
+      <span class="text-xs font-medium text-slate-400">
+        @if (pagination(); as pg) {
+          {{ 'backoffice.inventory.totalCount' | t:{count: pg.total} }}
+        }
+      </span>
+    </div>
+  </app-page-header>
+
+  <div class="mb-5 -mx-1 overflow-x-auto">
+    <div class="flex items-center gap-1 px-1 min-w-max">
+      @for (tab of typeTabs; track tab.value) {
+        <button
+          (click)="onTypeTab(tab.value)"
+          [class]="typeFilter === tab.value
+            ? 'px-3.5 py-2 text-xs font-bold rounded-xl bg-indigo-600 text-white shadow-sm shadow-indigo-200 transition-all'
+            : 'px-3.5 py-2 text-xs font-semibold rounded-xl text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-all cursor-pointer'"
+        >
+          {{ tab.labelKey | t }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-4 mb-6">
+    <div class="flex flex-col md:flex-row md:items-end gap-3">
+      <div class="w-full md:w-40">
+        <label for="inventory-product-id" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">{{ 'backoffice.inventory.productId' | t }}</label>
+        <input
+          id="inventory-product-id"
+          type="number"
+          min="1"
+          [(ngModel)]="productIdFilter"
+          (ngModelChange)="onFilterChange()"
+          [placeholder]="'backoffice.inventory.allProducts' | t"
+          class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-colors"
+        />
+      </div>
+      <div class="w-full md:w-40">
+        <label for="inventory-reference-id" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">{{ 'backoffice.inventory.referenceId' | t }}</label>
+        <input
+          id="inventory-reference-id"
+          type="number"
+          min="1"
+          [(ngModel)]="referenceIdFilter"
+          (ngModelChange)="onFilterChange()"
+          [placeholder]="'backoffice.inventory.anyReference' | t"
+          class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-colors"
+        />
+      </div>
+
+      @if (hasActiveFilters()) {
+        <button
+          (click)="clearFilters()"
+          class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold text-slate-500 hover:text-red-600 rounded-xl hover:bg-red-50 transition-colors cursor-pointer"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+          {{ 'common.clear' | t }}
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 overflow-hidden">
+      <div class="divide-y divide-slate-100">
+        @for (_ of [1, 2, 3, 4, 5]; track $index) {
+          <div class="px-5 py-4 flex items-center gap-4 stagger-children">
+            <div class="w-9 h-9 bg-slate-200 rounded-full shimmer shrink-0"></div>
+            <div class="flex-1 space-y-2">
+              <div class="h-3.5 w-36 bg-slate-200 rounded-full shimmer"></div>
+              <div class="h-3 w-48 bg-slate-200 rounded-full shimmer"></div>
+            </div>
+            <div class="h-5 w-20 bg-slate-200 rounded-full shimmer"></div>
+          </div>
+        }
+      </div>
+    </div>
+  } @else if (error()) {
+    <app-alert-banner type="error" [message]="error()">
+      <button
+        (click)="loadTransactions()"
+        class="mt-2 inline-flex items-center px-3.5 py-1.5 bg-red-600 text-white rounded-lg text-xs font-semibold hover:bg-red-500 cursor-pointer"
+      >
+        {{ 'common.retry' | t }}
+      </button>
+    </app-alert-banner>
+  } @else if (transactions().length === 0) {
+    <app-empty-state [title]="'backoffice.inventory.emptyTitle' | t" [description]="'backoffice.inventory.emptyDescription' | t">
+      <ng-container icon>
+        <svg class="w-10 h-10 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 3.75h18M3 7.5h18m-15 3.75h12a3 3 0 0 1 3 3v2.25a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V14.25a3 3 0 0 1 3-3Zm2.25 3.75h3m6 0h.75v.75H17.25v-.75Z" />
+        </svg>
+      </ng-container>
+    </app-empty-state>
+  } @else {
+    <div class="hidden md:block bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 overflow-hidden">
+      <table class="min-w-full divide-y divide-slate-100">
+        <thead>
+          <tr class="bg-slate-50/80">
+            <th class="px-5 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ 'backoffice.inventory.transaction' | t }}</th>
+            <th class="px-5 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ 'common.product' | t }}</th>
+            <th class="px-5 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ 'backoffice.inventory.type' | t }}</th>
+            <th class="px-5 py-3.5 text-right text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ 'common.quantity' | t }}</th>
+            <th class="px-5 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ 'common.reference' | t }}</th>
+            <th class="px-5 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ 'common.note' | t }}</th>
+            <th class="px-5 py-3.5 text-right text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ 'backoffice.inventory.createdAt' | t }}</th>
+            <th class="px-5 py-3.5 w-10"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100/80">
+          @for (transaction of transactions(); track transaction.id) {
+            <tr
+              class="hover:bg-indigo-50/30 cursor-pointer transition-colors group"
+              [routerLink]="['/backoffice/inventory/products', transaction.productId]"
+            >
+              <td class="px-5 py-3.5">
+                <span class="text-sm font-bold text-indigo-600 font-mono group-hover:text-indigo-700 transition-colors">#{{ transaction.id }}</span>
+                <p class="text-[10px] text-slate-400 mt-0.5">{{ 'backoffice.inventory.productIdLabel' | t:{id: transaction.productId} }}</p>
+              </td>
+              <td class="px-5 py-3.5">
+                <p class="text-sm font-semibold text-slate-800 line-clamp-1">{{ transaction.product.name }}</p>
+                <p class="text-[10px] text-slate-400 mt-0.5">{{ transaction.product.sku }}</p>
+              </td>
+              <td class="px-5 py-3.5">
+                <app-status-badge [status]="transaction.type" />
+              </td>
+              <td class="px-5 py-3.5 text-right">
+                <span class="inline-flex items-center justify-center min-w-16 rounded-full px-2 py-0.5 text-xs font-bold" [class]="quantityClass(transaction)">
+                  {{ formatQuantity(transaction) }}
+                </span>
+              </td>
+              <td class="px-5 py-3.5">
+                <span class="text-xs text-slate-500 font-mono">
+                  {{ transaction.referenceId ? ('backoffice.inventory.referenceWithId' | t:{id: transaction.referenceId}) : ('common.emptyDash' | t) }}
+                </span>
+              </td>
+              <td class="px-5 py-3.5">
+                <p class="text-sm text-slate-600 line-clamp-2">{{ transaction.note || ('common.emptyDash' | t) }}</p>
+              </td>
+              <td class="px-5 py-3.5 text-right">
+                <span class="text-xs text-slate-500">{{ transaction.createdAt | date:'mediumDate' }}</span>
+                <p class="text-[10px] text-slate-400">{{ transaction.createdAt | date:'shortTime' }}</p>
+              </td>
+              <td class="px-3 py-3.5">
+                <svg class="w-4 h-4 text-slate-300 group-hover:text-indigo-500 transition-colors" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="md:hidden space-y-3">
+      @for (transaction of transactions(); track transaction.id) {
+        <a
+          [routerLink]="['/backoffice/inventory/products', transaction.productId]"
+          class="block bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-4 hover:shadow-lg hover:border-indigo-200 transition-all"
+        >
+          <div class="flex items-center justify-between gap-3 mb-3">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="text-sm font-bold text-indigo-600 font-mono shrink-0">#{{ transaction.id }}</span>
+              <app-status-badge [status]="transaction.type" />
+            </div>
+            <span class="inline-flex items-center justify-center min-w-14 rounded-full px-2 py-0.5 text-[10px] font-bold shrink-0" [class]="quantityClass(transaction)">
+              {{ formatQuantity(transaction) }}
+            </span>
+          </div>
+
+          <div class="space-y-2">
+            <div>
+              <p class="text-xs font-semibold text-slate-800">{{ transaction.product.name }}</p>
+              <p class="text-[10px] text-slate-400">{{ transaction.product.sku }}</p>
+            </div>
+            <p class="text-[11px] text-slate-500 line-clamp-2">{{ transaction.note || ('common.emptyDash' | t) }}</p>
+            <div class="flex items-center justify-between text-[10px] text-slate-400">
+              <span>{{ transaction.referenceId ? ('backoffice.inventory.referenceWithId' | t:{id: transaction.referenceId}) : ('backoffice.inventory.noReference' | t) }}</span>
+              <span>{{ transaction.createdAt | date:'shortDate' }}</span>
+            </div>
+          </div>
+        </a>
+      }
+    </div>
+
+    @if (pagination(); as pg) {
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-3 mt-6">
+        <p class="text-xs font-medium text-slate-400">
+          {{ 'common.paginationSummary' | t:{page: pg.page, totalPages: pg.totalPages, total: pg.total, entity: ('backoffice.inventory.paginationEntity' | t)} }}
+        </p>
+        <app-pagination [page]="pg.page" [totalPages]="pg.totalPages" (pageChange)="goToPage($event)" />
+      </div>
+    }
+  }
+</div>

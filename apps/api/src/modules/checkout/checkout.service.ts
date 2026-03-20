@@ -167,27 +167,6 @@ export async function checkoutFromCart(userId: number, body: CartCheckoutBody) {
 
     try {
       const order = await prisma.$transaction(async (tx) => {
-        // Decrement stock for each item
-        for (const item of cartItems) {
-          const updated = await tx.product.updateMany({
-            where: {
-              id: item.productId,
-              stock: { gte: item.quantity },
-            },
-            data: {
-              stock: { decrement: item.quantity },
-            },
-          });
-
-          if (updated.count === 0) {
-            throw new AppError(
-              `Stock changed for "${item.product.name}". Please try again.`,
-              409,
-              'STOCK_CHANGED',
-            );
-          }
-        }
-
         // Calculate totals
         let subtotal = 0;
         const orderItemsData = cartItems.map((item) => {
@@ -332,25 +311,6 @@ export async function buyNowCheckout(userId: number, body: BuyNowCheckoutBody) {
 
     try {
       const order = await prisma.$transaction(async (tx) => {
-        // Decrement stock
-        const updated = await tx.product.updateMany({
-          where: {
-            id: body.productId,
-            stock: { gte: body.quantity },
-          },
-          data: {
-            stock: { decrement: body.quantity },
-          },
-        });
-
-        if (updated.count === 0) {
-          throw new AppError(
-            'Stock changed. Please try again.',
-            409,
-            'STOCK_CHANGED',
-          );
-        }
-
         // Create order
         const createdOrder = await tx.order.create({
           data: {

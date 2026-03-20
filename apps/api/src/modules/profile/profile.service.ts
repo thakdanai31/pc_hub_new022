@@ -1,4 +1,5 @@
 import { prisma } from '../../config/database.js';
+import { Prisma } from '../../generated/prisma/client.js';
 import { AppError } from '../../common/errors.js';
 import type { UpdateProfileBody } from './profile.schema.js';
 
@@ -46,14 +47,40 @@ export async function updateProfile(userId: number, body: UpdateProfileBody): Pr
     throw new AppError('User not found', 404, 'NOT_FOUND');
   }
 
-  const updated = await prisma.user.update({
-    where: { id: userId },
-    data: {
-      ...(body.firstName !== undefined && { firstName: body.firstName }),
-      ...(body.lastName !== undefined && { lastName: body.lastName }),
-      ...(body.phoneNumber !== undefined && { phoneNumber: body.phoneNumber }),
-    },
-  });
+  if (body.phoneNumber !== undefined) {
+    const existingPhone = await prisma.user.findFirst({
+      where: {
+        phoneNumber: body.phoneNumber,
+        id: { not: userId },
+      },
+      select: { id: true },
+    });
+
+    if (existingPhone) {
+      throw new AppError('Phone number already registered', 409, 'PHONE_TAKEN');
+    }
+  }
+
+  let updated;
+  try {
+    updated = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...(body.firstName !== undefined && { firstName: body.firstName }),
+        ...(body.lastName !== undefined && { lastName: body.lastName }),
+        ...(body.phoneNumber !== undefined && { phoneNumber: body.phoneNumber }),
+      },
+    });
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === 'P2002'
+    ) {
+      throw new AppError('Phone number already registered', 409, 'PHONE_TAKEN');
+    }
+
+    throw error;
+  }
 
   return toProfileData(updated);
 }

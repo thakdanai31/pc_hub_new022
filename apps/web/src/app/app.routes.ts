@@ -35,6 +35,42 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'claims',
+        loadComponent: () =>
+          import('./features/backoffice/claims/claim-list').then(
+            (m) => m.BoClaimListPage,
+          ),
+      },
+      {
+        path: 'claims/:claimId',
+        loadComponent: () =>
+          import('./features/backoffice/claims/claim-detail').then(
+            (m) => m.BoClaimDetailPage,
+          ),
+      },
+      {
+        path: 'inventory',
+        loadComponent: () =>
+          import('./features/backoffice/inventory/inventory-list').then(
+            (m) => m.BoInventoryListPage,
+          ),
+      },
+      {
+        path: 'inventory/products/:productId',
+        loadComponent: () =>
+          import('./features/backoffice/inventory/inventory-detail').then(
+            (m) => m.BoInventoryDetailPage,
+          ),
+      },
+      {
+        path: 'inventory/reconciliation',
+        canActivate: [roleGuard('ADMIN')],
+        loadComponent: () =>
+          import(
+            './features/backoffice/inventory/inventory-reconciliation'
+          ).then((m) => m.BoInventoryReconciliationPage),
+      },
+      {
         path: 'products',
         loadComponent: () =>
           import('./features/backoffice/products/product-list').then(
@@ -152,6 +188,20 @@ export const routes: Routes = [
           import('./features/auth/login/login').then((m) => m.Login),
       },
       {
+        path: 'forgot-password',
+        loadComponent: () =>
+          import('./features/auth/forgot-password/forgot-password').then(
+            (m) => m.ForgotPassword,
+          ),
+      },
+      {
+        path: 'reset-password',
+        loadComponent: () =>
+          import('./features/auth/reset-password/reset-password').then(
+            (m) => m.ResetPassword,
+          ),
+      },
+      {
         path: 'register',
         canActivate: [guestGuard],
         loadComponent: () =>
@@ -221,6 +271,30 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/orders/order-detail').then(
             (m) => m.OrderDetailPage,
+          ),
+      },
+      {
+        path: 'account/claims',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/account/claims/claim-history').then(
+            (m) => m.ClaimHistoryPage,
+          ),
+      },
+      {
+        path: 'account/claims/new',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/account/claims/claim-create').then(
+            (m) => m.ClaimCreatePage,
+          ),
+      },
+      {
+        path: 'account/claims/:claimId',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/account/claims/claim-detail').then(
+            (m) => m.ClaimDetailPage,
           ),
       },
       {

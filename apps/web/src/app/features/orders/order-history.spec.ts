@@ -2,12 +2,16 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
+import { LanguageService } from '../../core/services/language.service';
+import { LANGUAGE_STORAGE_KEY } from '../../core/i18n/translations';
 import { OrderHistoryPage } from './order-history';
 
 describe('OrderHistoryPage', () => {
   let httpTesting: HttpTestingController;
 
   beforeEach(() => {
+    localStorage.clear();
+
     TestBed.configureTestingModule({
       imports: [OrderHistoryPage],
       providers: [
@@ -20,6 +24,7 @@ describe('OrderHistoryPage', () => {
   });
 
   afterEach(() => {
+    localStorage.clear();
     httpTesting.verify();
   });
 
@@ -80,5 +85,28 @@ describe('OrderHistoryPage', () => {
     const el = fixture.nativeElement as HTMLElement;
     expect(el.textContent).toContain('PCH-20240101-AAAA');
     expect(el.textContent).toContain('2 items');
+  });
+
+  it('renders translated Thai headings when the saved language is Thai', () => {
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, 'th');
+
+    const fixture = TestBed.createComponent(OrderHistoryPage);
+    const language = TestBed.inject(LanguageService);
+    fixture.detectChanges();
+
+    const req = httpTesting.expectOne((r) =>
+      r.url.includes('/account/orders') && r.method === 'GET',
+    );
+    req.flush({
+      success: true,
+      message: 'OK',
+      data: [],
+      pagination: { page: 1, limit: 10, total: 0, totalPages: 0 },
+    });
+    fixture.detectChanges();
+
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.textContent).toContain(language.translate('storefront.orders.history.title'));
+    expect(el.textContent).toContain(language.translate('storefront.orders.history.emptyTitle'));
   });
 });

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import request from 'supertest';
 import { app } from '../src/app.js';
 import { prisma } from '../src/config/database.js';
-import { getBodyString, getBodyNumber } from './helpers.js';
+import { getBodyString, getBodyNumber, getUniqueTestPhoneNumber } from './helpers.js';
 
 const CUSTOMER = {
   firstName: 'Stock',
@@ -32,6 +32,7 @@ let categoryId: number;
 let brandId: number;
 
 async function cleanDatabase() {
+  await prisma.inventoryTransaction.deleteMany();
   await prisma.paymentSlip.deleteMany();
   await prisma.payment.deleteMany();
   await prisma.cartItem.deleteMany();
@@ -49,6 +50,7 @@ async function cleanDatabase() {
 }
 
 async function cleanOrders() {
+  await prisma.inventoryTransaction.deleteMany();
   await prisma.paymentSlip.deleteMany();
   await prisma.payment.deleteMany();
   await prisma.cartItem.deleteMany();
@@ -69,6 +71,7 @@ beforeAll(async () => {
   await request(app).post('/api/v1/auth/register').send({
     ...CUSTOMER,
     email: 'stock-staff@test.com',
+    phoneNumber: getUniqueTestPhoneNumber(),
   });
   await prisma.user.update({
     where: { email: 'stock-staff@test.com' },
@@ -120,97 +123,232 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
-describe('Stock decrement on checkout', () => {
+describe('Order inventory commitment', () => {
   beforeEach(cleanOrders);
 
-  it('buy-now decrements stock by exact quantity', async () => {
-    const stockBefore = (await prisma.product.findUnique({ where: { id: productAId } }))!.stock;
-
-    await request(app)
+  it('does not deduct stock when buy-now order is created', async () => {
+    const res = await request(app)
       .post('/api/v1/checkout/buy-now')
       .set('Authorization', `Bearer ${customerToken}`)
       .send({ productId: productAId, quantity: 3, addressId, paymentMethod: 'COD' });
 
-    const stockAfter = (await prisma.product.findUnique({ where: { id: productAId } }))!.stock;
-    expect(stockAfter).toBe(stockBefore - 3);
-  });
-
-  it('checkout with exact remaining stock succeeds', async () => {
-    // Stock is 10, buy all 10
-    const res = await request(app)
-      .post('/api/v1/checkout/buy-now')
-      .set('Authorization', `Bearer ${customerToken}`)
-      .send({ productId: productAId, quantity: 10, addressId, paymentMethod: 'COD' });
-
     expect(res.status).toBe(201);
 
     const product = await prisma.product.findUnique({ where: { id: productAId } });
-    expect(product!.stock).toBe(0);
+    expect(product?.stock).toBe(10);
   });
 
-  it('checkout exceeding stock fails and stock remains unchanged', async () => {
-    const stockBefore = (await prisma.product.findUnique({ where: { id: productAId } }))!.stock;
-
-    const res = await request(app)
-      .post('/api/v1/checkout/buy-now')
-      .set('Authorization', `Bearer ${customerToken}`)
-      .send({ productId: productAId, quantity: stockBefore + 1, addressId, paymentMethod: 'COD' });
-
-    expect(res.status).toBe(400);
-    expect(res.body.code).toBe('INSUFFICIENT_STOCK');
-
-    const stockAfter = (await prisma.product.findUnique({ where: { id: productAId } }))!.stock;
-    expect(stockAfter).toBe(stockBefore);
-  });
-});
-
-describe('Stock restoration on rejection', () => {
-  beforeEach(cleanOrders);
-
-  it('rejecting COD order restores stock', async () => {
+  it('commits stock and creates SALE transactions when COD order is approved', async () => {
     const qty = 4;
     const res = await request(app)
       .post('/api/v1/checkout/buy-now')
       .set('Authorization', `Bearer ${customerToken}`)
       .send({ productId: productAId, quantity: qty, addressId, paymentMethod: 'COD' });
-
     const orderId = getBodyNumber(res, 'data', 'id');
-    const stockAfterCheckout = (await prisma.product.findUnique({ where: { id: productAId } }))!.stock;
-    expect(stockAfterCheckout).toBe(10 - qty);
 
-    await request(app)
-      .post(`/api/v1/backoffice/orders/${orderId}/reject`)
-      .set('Authorization', `Bearer ${staffToken}`)
-      .send({ reason: 'Stock test rejection' });
+    const approveRes = await request(app)
+      .post(`/api/v1/backoffice/orders/${orderId}/approve`)
+      .set('Authorization', `Bearer ${staffToken}`);
 
-    const stockAfterReject = (await prisma.product.findUnique({ where: { id: productAId } }))!.stock;
-    expect(stockAfterReject).toBe(10);
+    expect(approveRes.status).toBe(200);
+    expect(approveRes.body.data.status).toBe('PROCESSING');
+
+    const product = await prisma.product.findUnique({ where: { id: productAId } });
+    expect(product?.stock).toBe(6);
+
+    const transactions = await prisma.inventoryTransaction.findMany({
+      where: { referenceId: orderId, type: 'SALE' },
+      orderBy: { createdAt: 'asc' },
+    });
+    expect(transactions).toHaveLength(1);
+    expect(transactions[0]?.productId).toBe(productAId);
+    expect(transactions[0]?.quantity).toBe(qty);
+    expect(transactions[0]?.referenceId).toBe(orderId);
   });
 
-  it('rejecting PromptPay order restores stock', async () => {
+  it('does not deduct PromptPay stock until the order enters processing', async () => {
+    const qty = 2;
+    const res = await request(app)
+      .post('/api/v1/checkout/buy-now')
+      .set('Authorization', `Bearer ${customerToken}`)
+      .send({
+        productId: productAId,
+        quantity: qty,
+        addressId,
+        paymentMethod: 'PROMPTPAY_QR',
+      });
+    const orderId = getBodyNumber(res, 'data', 'id');
+
+    await prisma.order.update({
+      where: { id: orderId },
+      data: { status: 'PAYMENT_REVIEW' },
+    });
+    await prisma.payment.updateMany({
+      where: { orderId },
+      data: { status: 'PENDING_REVIEW' },
+    });
+
+    const approveRes = await request(app)
+      .post(`/api/v1/backoffice/orders/${orderId}/approve`)
+      .set('Authorization', `Bearer ${staffToken}`);
+
+    expect(approveRes.status).toBe(200);
+    expect(approveRes.body.data.status).toBe('APPROVED');
+
+    const stockAfterApprove = await prisma.product.findUnique({
+      where: { id: productAId },
+    });
+    expect(stockAfterApprove?.stock).toBe(10);
+
+    const processRes = await request(app)
+      .post(`/api/v1/backoffice/orders/${orderId}/status`)
+      .set('Authorization', `Bearer ${staffToken}`)
+      .send({ status: 'PROCESSING' });
+
+    expect(processRes.status).toBe(200);
+
+    const stockAfterProcessing = await prisma.product.findUnique({
+      where: { id: productAId },
+    });
+    expect(stockAfterProcessing?.stock).toBe(8);
+
+    const saleCount = await prisma.inventoryTransaction.count({
+      where: { referenceId: orderId, type: 'SALE' },
+    });
+    expect(saleCount).toBe(1);
+  });
+
+  it('rejects stock commitment when stock becomes insufficient at processing time', async () => {
+    const qty = 4;
+    const res = await request(app)
+      .post('/api/v1/checkout/buy-now')
+      .set('Authorization', `Bearer ${customerToken}`)
+      .send({ productId: productAId, quantity: qty, addressId, paymentMethod: 'COD' });
+    const orderId = getBodyNumber(res, 'data', 'id');
+
+    await prisma.product.update({
+      where: { id: productAId },
+      data: { stock: 3 },
+    });
+
+    const approveRes = await request(app)
+      .post(`/api/v1/backoffice/orders/${orderId}/approve`)
+      .set('Authorization', `Bearer ${staffToken}`);
+
+    expect(approveRes.status).toBe(400);
+    expect(approveRes.body.code).toBe('INSUFFICIENT_STOCK');
+
+    const order = await prisma.order.findUnique({ where: { id: orderId } });
+    expect(order?.status).toBe('PENDING');
+
+    const product = await prisma.product.findUnique({ where: { id: productAId } });
+    expect(product?.stock).toBe(3);
+
+    const saleCount = await prisma.inventoryTransaction.count({
+      where: { referenceId: orderId, type: 'SALE' },
+    });
+    expect(saleCount).toBe(0);
+  });
+
+  it('does not double deduct stock on repeated approval', async () => {
+    const qty = 2;
+    const res = await request(app)
+      .post('/api/v1/checkout/buy-now')
+      .set('Authorization', `Bearer ${customerToken}`)
+      .send({ productId: productAId, quantity: qty, addressId, paymentMethod: 'COD' });
+    const orderId = getBodyNumber(res, 'data', 'id');
+
+    const firstApproveRes = await request(app)
+      .post(`/api/v1/backoffice/orders/${orderId}/approve`)
+      .set('Authorization', `Bearer ${staffToken}`);
+    expect(firstApproveRes.status).toBe(200);
+
+    const secondApproveRes = await request(app)
+      .post(`/api/v1/backoffice/orders/${orderId}/approve`)
+      .set('Authorization', `Bearer ${staffToken}`);
+    expect(secondApproveRes.status).toBe(400);
+    expect(secondApproveRes.body.code).toBe('INVALID_ORDER_STATUS');
+
+    const product = await prisma.product.findUnique({ where: { id: productAId } });
+    expect(product?.stock).toBe(8);
+
+    const saleCount = await prisma.inventoryTransaction.count({
+      where: { referenceId: orderId, type: 'SALE' },
+    });
+    expect(saleCount).toBe(1);
+  });
+});
+
+describe('Order inventory restoration', () => {
+  beforeEach(cleanOrders);
+
+  it('restores stock and creates RETURN_IN transactions when a committed order is cancelled', async () => {
     const qty = 3;
     const res = await request(app)
       .post('/api/v1/checkout/buy-now')
       .set('Authorization', `Bearer ${customerToken}`)
-      .send({ productId: productAId, quantity: qty, addressId, paymentMethod: 'PROMPTPAY_QR' });
-
+      .send({ productId: productAId, quantity: qty, addressId, paymentMethod: 'COD' });
     const orderId = getBodyNumber(res, 'data', 'id');
 
-    // Move to PAYMENT_REVIEW so it can be rejected
-    await prisma.order.update({ where: { id: orderId }, data: { status: 'PAYMENT_REVIEW' } });
-    await prisma.payment.updateMany({ where: { orderId }, data: { status: 'PENDING_REVIEW' } });
-
     await request(app)
-      .post(`/api/v1/backoffice/orders/${orderId}/reject`)
-      .set('Authorization', `Bearer ${staffToken}`)
-      .send({ reason: 'PromptPay stock test rejection' });
+      .post(`/api/v1/backoffice/orders/${orderId}/approve`)
+      .set('Authorization', `Bearer ${staffToken}`);
 
-    const stockAfterReject = (await prisma.product.findUnique({ where: { id: productAId } }))!.stock;
-    expect(stockAfterReject).toBe(10);
+    const cancelRes = await request(app)
+      .post(`/api/v1/backoffice/orders/${orderId}/cancel`)
+      .set('Authorization', `Bearer ${staffToken}`)
+      .send({ reason: 'Stock restoration test' });
+
+    expect(cancelRes.status).toBe(200);
+    expect(cancelRes.body.data.status).toBe('CANCELLED');
+
+    const product = await prisma.product.findUnique({ where: { id: productAId } });
+    expect(product?.stock).toBe(10);
+
+    const returnTransactions = await prisma.inventoryTransaction.findMany({
+      where: { referenceId: orderId, type: 'RETURN_IN' },
+      orderBy: { createdAt: 'asc' },
+    });
+    expect(returnTransactions).toHaveLength(1);
+    expect(returnTransactions[0]?.productId).toBe(productAId);
+    expect(returnTransactions[0]?.quantity).toBe(qty);
   });
 
-  it('multi-item order rejection restores all items stock', async () => {
-    // Add two products to cart then checkout
+  it('does not double restore stock on repeated cancellation', async () => {
+    const qty = 2;
+    const res = await request(app)
+      .post('/api/v1/checkout/buy-now')
+      .set('Authorization', `Bearer ${customerToken}`)
+      .send({ productId: productAId, quantity: qty, addressId, paymentMethod: 'COD' });
+    const orderId = getBodyNumber(res, 'data', 'id');
+
+    await request(app)
+      .post(`/api/v1/backoffice/orders/${orderId}/approve`)
+      .set('Authorization', `Bearer ${staffToken}`);
+
+    const firstCancelRes = await request(app)
+      .post(`/api/v1/backoffice/orders/${orderId}/cancel`)
+      .set('Authorization', `Bearer ${staffToken}`)
+      .send({ reason: 'First cancellation' });
+    expect(firstCancelRes.status).toBe(200);
+
+    const secondCancelRes = await request(app)
+      .post(`/api/v1/backoffice/orders/${orderId}/cancel`)
+      .set('Authorization', `Bearer ${staffToken}`)
+      .send({ reason: 'Second cancellation' });
+    expect(secondCancelRes.status).toBe(400);
+    expect(secondCancelRes.body.code).toBe('INVALID_ORDER_STATUS');
+
+    const product = await prisma.product.findUnique({ where: { id: productAId } });
+    expect(product?.stock).toBe(10);
+
+    const returnCount = await prisma.inventoryTransaction.count({
+      where: { referenceId: orderId, type: 'RETURN_IN' },
+    });
+    expect(returnCount).toBe(1);
+  });
+
+  it('commits and restores inventory for all items in a cart order', async () => {
     await request(app)
       .post('/api/v1/cart/items')
       .set('Authorization', `Bearer ${customerToken}`)
@@ -225,23 +363,54 @@ describe('Stock restoration on rejection', () => {
       .post('/api/v1/checkout/cart')
       .set('Authorization', `Bearer ${customerToken}`)
       .send({ addressId, paymentMethod: 'COD' });
-
-    expect(checkoutRes.status).toBe(201);
     const orderId = getBodyNumber(checkoutRes, 'data', 'id');
 
-    const stockAAfterCheckout = (await prisma.product.findUnique({ where: { id: productAId } }))!.stock;
-    const stockBAfterCheckout = (await prisma.product.findUnique({ where: { id: productBId } }))!.stock;
-    expect(stockAAfterCheckout).toBe(8);
-    expect(stockBAfterCheckout).toBe(2);
+    const stockAAfterCheckout = await prisma.product.findUnique({
+      where: { id: productAId },
+    });
+    const stockBAfterCheckout = await prisma.product.findUnique({
+      where: { id: productBId },
+    });
+    expect(stockAAfterCheckout?.stock).toBe(10);
+    expect(stockBAfterCheckout?.stock).toBe(5);
 
     await request(app)
-      .post(`/api/v1/backoffice/orders/${orderId}/reject`)
-      .set('Authorization', `Bearer ${staffToken}`)
-      .send({ reason: 'Multi-item rejection test' });
+      .post(`/api/v1/backoffice/orders/${orderId}/approve`)
+      .set('Authorization', `Bearer ${staffToken}`);
 
-    const stockAAfterReject = (await prisma.product.findUnique({ where: { id: productAId } }))!.stock;
-    const stockBAfterReject = (await prisma.product.findUnique({ where: { id: productBId } }))!.stock;
-    expect(stockAAfterReject).toBe(10);
-    expect(stockBAfterReject).toBe(5);
+    const stockAAfterApprove = await prisma.product.findUnique({
+      where: { id: productAId },
+    });
+    const stockBAfterApprove = await prisma.product.findUnique({
+      where: { id: productBId },
+    });
+    expect(stockAAfterApprove?.stock).toBe(8);
+    expect(stockBAfterApprove?.stock).toBe(2);
+
+    const saleTransactions = await prisma.inventoryTransaction.findMany({
+      where: { referenceId: orderId, type: 'SALE' },
+      orderBy: { productId: 'asc' },
+    });
+    expect(saleTransactions).toHaveLength(2);
+    expect(saleTransactions.every((row) => row.referenceId === orderId)).toBe(true);
+
+    await request(app)
+      .post(`/api/v1/backoffice/orders/${orderId}/cancel`)
+      .set('Authorization', `Bearer ${staffToken}`)
+      .send({ reason: 'Cancel multi-item order' });
+
+    const stockAAfterCancel = await prisma.product.findUnique({
+      where: { id: productAId },
+    });
+    const stockBAfterCancel = await prisma.product.findUnique({
+      where: { id: productBId },
+    });
+    expect(stockAAfterCancel?.stock).toBe(10);
+    expect(stockBAfterCancel?.stock).toBe(5);
+
+    const returnCount = await prisma.inventoryTransaction.count({
+      where: { referenceId: orderId, type: 'RETURN_IN' },
+    });
+    expect(returnCount).toBe(2);
   });
 });

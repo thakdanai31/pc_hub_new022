@@ -1,31 +1,32 @@
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
   <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8 animate-fade-up">
     <div>
-      <h1 class="text-heading text-2xl sm:text-3xl text-slate-900">My Orders</h1>
+      <h1 class="text-heading text-2xl sm:text-3xl text-slate-900">{{ 'storefront.orders.history.title' | t }}</h1>
       @if (!loading() && pagination(); as p) {
         <p class="mt-1.5 text-sm text-slate-500">
-          <span class="font-semibold text-indigo-600">{{ p.total }}</span> {{ p.total === 1 ? 'order' : 'orders' }} total
+          <span class="font-semibold text-indigo-600">{{ p.total }}</span>
+          {{ 'storefront.orders.history.totalCount' | t:{count: p.total} }}
         </p>
       }
     </div>
     <div>
-      <label for="status-filter" class="block text-xs font-semibold text-slate-600 mb-2">Filter by status</label>
+      <label for="status-filter" class="block text-xs font-semibold text-slate-600 mb-2">{{ 'storefront.orders.history.filter' | t }}</label>
       <select
         id="status-filter"
         [ngModel]="statusFilter()"
         (ngModelChange)="onFilterChange($event)"
         class="rounded-xl border border-slate-300/80 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-700 focus:bg-white focus:border-indigo-500 focus:outline-none transition-all"
       >
-        <option value="">All Statuses</option>
-        <option value="PENDING">Pending</option>
-        <option value="AWAITING_PAYMENT">Awaiting Payment</option>
-        <option value="PAYMENT_REVIEW">Payment Review</option>
-        <option value="APPROVED">Approved</option>
-        <option value="PROCESSING">Processing</option>
-        <option value="SHIPPED">Shipped</option>
-        <option value="DELIVERED">Delivered</option>
-        <option value="REJECTED">Rejected</option>
-        <option value="CANCELLED">Cancelled</option>
+        <option value="">{{ 'common.all' | t }}</option>
+        <option value="PENDING">{{ 'enum.PENDING' | t }}</option>
+        <option value="AWAITING_PAYMENT">{{ 'enum.AWAITING_PAYMENT' | t }}</option>
+        <option value="PAYMENT_REVIEW">{{ 'enum.PAYMENT_REVIEW' | t }}</option>
+        <option value="APPROVED">{{ 'enum.APPROVED' | t }}</option>
+        <option value="PROCESSING">{{ 'enum.PROCESSING' | t }}</option>
+        <option value="SHIPPED">{{ 'enum.SHIPPED' | t }}</option>
+        <option value="DELIVERED">{{ 'enum.DELIVERED' | t }}</option>
+        <option value="REJECTED">{{ 'enum.REJECTED' | t }}</option>
+        <option value="CANCELLED">{{ 'enum.CANCELLED' | t }}</option>
       </select>
     </div>
   </div>
@@ -52,14 +53,14 @@
     <div class="bg-white rounded-2xl shadow-md border border-slate-200/60 p-10 text-center">
       <app-alert-banner type="error" [message]="error()" />
       <div class="mt-5">
-        <button (click)="goToPage(1)" class="btn-secondary rounded-xl px-5 py-2.5 text-sm cursor-pointer">Retry</button>
+        <button (click)="goToPage(1)" class="btn-secondary rounded-xl px-5 py-2.5 text-sm cursor-pointer">{{ 'common.retry' | t }}</button>
       </div>
     </div>
   } @else if (orders().length === 0) {
     <div class="bg-white rounded-2xl shadow-md border border-slate-200/60">
       <app-empty-state
-        title="No orders found"
-        [description]="statusFilter() ? 'No orders match the selected filter.' : 'You haven\u0027t placed any orders yet.'"
+        [title]="'storefront.orders.history.emptyTitle' | t"
+        [description]="statusFilter() ? ('storefront.orders.history.emptyFiltered' | t) : ('storefront.orders.history.emptyDefault' | t)"
       >
         <div icon>
           <svg class="mx-auto h-12 w-12 text-slate-300" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24">
@@ -70,7 +71,7 @@
           routerLink="/products"
           class="btn-primary rounded-xl px-5 py-2.5 text-sm mt-4 inline-flex"
         >
-          Start Shopping
+          {{ 'storefront.orders.history.startShopping' | t }}
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" /></svg>
         </a>
       </app-empty-state>
@@ -90,10 +91,10 @@
               </div>
               <div class="flex flex-wrap items-center gap-2 mt-2 text-xs text-slate-400">
                 <span>{{ order.createdAt | date:'mediumDate' }}</span>
-                <span class="text-slate-200">·</span>
-                <span>{{ order.itemCount }} {{ order.itemCount === 1 ? 'item' : 'items' }}</span>
-                <span class="text-slate-200">·</span>
-                <span>{{ order.paymentMethod === 'COD' ? 'Cash on Delivery' : 'PromptPay QR' }}</span>
+                <span class="text-slate-200">/</span>
+                <span>{{ 'storefront.orders.history.itemCount' | t:{count: order.itemCount} }}</span>
+                <span class="text-slate-200">/</span>
+                <span><app-status-badge [status]="order.paymentMethod" /></span>
               </div>
             </div>
             <div class="flex items-center gap-3 shrink-0">

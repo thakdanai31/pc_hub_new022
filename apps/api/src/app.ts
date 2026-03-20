@@ -17,6 +17,7 @@ import { cartRouter } from './modules/cart/cart.routes.js';
 import { checkoutRouter } from './modules/checkout/checkout.routes.js';
 import { orderRouter } from './modules/orders/order.routes.js';
 import { profileRouter } from './modules/profile/profile.routes.js';
+import { claimRouter } from './modules/claims/claim.routes.js';
 
 const app = express();
 
@@ -52,6 +53,7 @@ app.use('/api/v1/cart', cartRouter);
 app.use('/api/v1/checkout', checkoutRouter);
 app.use('/api/v1/account/orders', orderRouter);
 app.use('/api/v1/account/profile', profileRouter);
+app.use('/api/v1/account/claims', claimRouter);
 
 // 404 handler
 app.use(notFoundHandler);

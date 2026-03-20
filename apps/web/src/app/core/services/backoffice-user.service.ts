@@ -4,14 +4,20 @@ import { environment } from '../../../environments/environment';
 import type { ApiResponse } from '../../shared/models/api-response.model';
 import type { PaginatedApiResponse } from '../../shared/models/pagination.model';
 
+export type UserRole = 'CUSTOMER' | 'STAFF' | 'ADMIN';
+
 export interface AdminUser {
   id: number;
   firstName: string;
   lastName: string;
   email: string;
   phoneNumber: string;
-  role: string;
+  role: UserRole;
   isActive: boolean;
+  bannedUntil: string | null;
+  banReason: string | null;
+  bannedAt: string | null;
+  bannedByUserId: number | null;
   createdAt: string;
 }
 
@@ -19,7 +25,7 @@ export interface UserListParams {
   page?: number;
   limit?: number;
   search?: string;
-  role?: 'STAFF' | 'ADMIN';
+  role?: UserRole;
 }
 
 export interface CreateUserBody {
@@ -34,7 +40,11 @@ export interface UpdateUserBody {
   firstName?: string;
   lastName?: string;
   phoneNumber?: string;
-  isActive?: boolean;
+}
+
+export interface DisableUserBody {
+  bannedUntil?: string;
+  banReason?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -69,9 +79,16 @@ export class BackofficeUserService {
     );
   }
 
-  disableUser(userId: number) {
+  disableUser(userId: number, body: DisableUserBody = {}) {
     return this.http.post<ApiResponse<AdminUser>>(
       `${this.apiUrl}/backoffice/users/${userId}/disable`,
+      body,
+    );
+  }
+
+  enableUser(userId: number) {
+    return this.http.post<ApiResponse<AdminUser>>(
+      `${this.apiUrl}/backoffice/users/${userId}/enable`,
       {},
     );
   }

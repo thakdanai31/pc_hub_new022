@@ -49,6 +49,7 @@ let productId: number;
 let product2Id: number;
 
 async function cleanDatabase() {
+  await prisma.inventoryTransaction.deleteMany();
   await prisma.paymentSlip.deleteMany();
   await prisma.payment.deleteMany();
   await prisma.cartItem.deleteMany();
@@ -147,6 +148,7 @@ afterAll(async () => {
 
 function cleanOrders() {
   return prisma.$transaction([
+    prisma.inventoryTransaction.deleteMany(),
     prisma.paymentSlip.deleteMany(),
     prisma.payment.deleteMany(),
     prisma.orderItem.deleteMany(),

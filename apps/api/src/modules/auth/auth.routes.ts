@@ -2,7 +2,12 @@ import { Router } from 'express';
 import * as authController from './auth.controller.js';
 import { validate } from '../../middleware/validate.js';
 import { requireAuth, extractUser } from '../../middleware/auth.js';
-import { registerBodySchema, loginBodySchema } from './auth.schema.js';
+import {
+  registerBodySchema,
+  loginBodySchema,
+  forgotPasswordBodySchema,
+  resetPasswordBodySchema,
+} from './auth.schema.js';
 
 export const authRouter = Router();
 
@@ -16,6 +21,18 @@ authRouter.post(
   '/login',
   validate({ body: loginBodySchema }),
   authController.login,
+);
+
+authRouter.post(
+  '/forgot-password',
+  validate({ body: forgotPasswordBodySchema }),
+  authController.forgotPassword,
+);
+
+authRouter.post(
+  '/reset-password',
+  validate({ body: resetPasswordBodySchema }),
+  authController.resetPassword,
 );
 
 authRouter.post('/refresh', authController.refresh);

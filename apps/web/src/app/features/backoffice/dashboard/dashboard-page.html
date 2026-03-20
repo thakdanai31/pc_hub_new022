@@ -8,8 +8,10 @@
         {{ auth.user()?.firstName?.charAt(0) }}{{ auth.user()?.lastName?.charAt(0) }}
       </div>
       <div>
-        <h1 class="text-heading text-xl sm:text-2xl text-white">Welcome back, {{ auth.user()?.firstName }}</h1>
-        <p class="text-sm text-slate-400 mt-0.5">Here's what's happening with your store today.</p>
+        <h1 class="text-heading text-xl sm:text-2xl text-white">
+          {{ 'backoffice.dashboard.welcome' | t:{name: auth.user()?.firstName} }}
+        </h1>
+        <p class="text-sm text-slate-400 mt-0.5">{{ 'backoffice.dashboard.subtitle' | t }}</p>
       </div>
     </div>
   </div>
@@ -29,7 +31,7 @@
   } @else if (error()) {
     <div class="bg-white rounded-2xl shadow-md border border-slate-200/60 p-8 mb-8">
       <app-alert-banner type="error" [message]="error()">
-        <button (click)="retry()" class="mt-2 btn-destructive rounded-lg px-3 py-1.5 text-xs cursor-pointer">Retry</button>
+        <button (click)="retry()" class="mt-2 btn-destructive rounded-lg px-3 py-1.5 text-xs cursor-pointer">{{ 'common.retry' | t }}</button>
       </app-alert-banner>
     </div>
   } @else {
@@ -39,7 +41,7 @@
         <div class="relative bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5 overflow-hidden">
           <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-indigo-400"></div>
           <div class="flex items-center justify-between mb-3">
-            <p class="text-sm font-semibold text-slate-500">Today's Orders</p>
+            <p class="text-sm font-semibold text-slate-500">{{ 'backoffice.dashboard.todaysOrders' | t }}</p>
             <div class="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
               <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25Z" /></svg>
             </div>
@@ -49,7 +51,7 @@
         <div class="relative bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5 overflow-hidden">
           <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-emerald-400"></div>
           <div class="flex items-center justify-between mb-3">
-            <p class="text-sm font-semibold text-slate-500">Completed Revenue</p>
+            <p class="text-sm font-semibold text-slate-500">{{ 'backoffice.dashboard.completedRevenue' | t }}</p>
             <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
               <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z" /></svg>
             </div>
@@ -59,7 +61,7 @@
         <div class="relative bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5 overflow-hidden">
           <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-amber-400"></div>
           <div class="flex items-center justify-between mb-3">
-            <p class="text-sm font-semibold text-slate-500">Pending Revenue</p>
+            <p class="text-sm font-semibold text-slate-500">{{ 'backoffice.dashboard.pendingRevenue' | t }}</p>
             <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
               <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
             </div>
@@ -75,7 +77,7 @@
         <div class="relative bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5 overflow-hidden">
           <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-emerald-400"></div>
           <div class="flex items-center justify-between mb-2">
-            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Revenue</p>
+            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{{ 'backoffice.dashboard.revenue' | t }}</p>
             <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
               <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
             </div>
@@ -85,7 +87,7 @@
         <div class="relative bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5 overflow-hidden">
           <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-indigo-400"></div>
           <div class="flex items-center justify-between mb-2">
-            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Orders</p>
+            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{{ 'backoffice.dashboard.orders' | t }}</p>
             <div class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
               <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007Z" /></svg>
             </div>
@@ -95,7 +97,7 @@
         <div class="relative bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5 overflow-hidden">
           <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-amber-400"></div>
           <div class="flex items-center justify-between mb-2">
-            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Review</p>
+            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{{ 'backoffice.dashboard.review' | t }}</p>
             <div class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
               <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
             </div>
@@ -105,7 +107,7 @@
         <div class="relative bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5 overflow-hidden">
           <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-sky-500 to-sky-400"></div>
           <div class="flex items-center justify-between mb-2">
-            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Customers</p>
+            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{{ 'backoffice.dashboard.customers' | t }}</p>
             <div class="w-8 h-8 rounded-lg bg-sky-50 flex items-center justify-center">
               <svg class="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" /></svg>
             </div>
@@ -115,7 +117,7 @@
         <div class="relative bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5 overflow-hidden">
           <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-violet-500 to-violet-400"></div>
           <div class="flex items-center justify-between mb-2">
-            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Products</p>
+            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{{ 'backoffice.dashboard.products' | t }}</p>
             <div class="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center">
               <svg class="w-4 h-4 text-violet-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" /></svg>
             </div>
@@ -123,6 +125,98 @@
           <p class="text-xl font-extrabold text-slate-900">{{ as_.totalProducts }}</p>
         </div>
       </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6 stagger-children">
+        <a routerLink="/backoffice/claims" class="relative bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5 overflow-hidden hover:shadow-lg hover:border-amber-200 transition-all">
+          <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-amber-400"></div>
+          <div class="flex items-center justify-between mb-3">
+            <p class="text-sm font-semibold text-slate-500">{{ 'backoffice.dashboard.claimsToReview' | t }}</p>
+            <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
+              <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.076-4.076a1.526 1.526 0 0 1 1.037-.443 48.282 48.282 0 0 0 5.68-.494c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" /></svg>
+            </div>
+          </div>
+          <p class="text-3xl font-extrabold text-slate-900">{{ claimsNeedingReview() }}</p>
+          <p class="text-xs text-slate-400 mt-2">
+            {{ 'backoffice.dashboard.pendingInReview' | t:{pending: claimStatusCount('PENDING'), review: claimStatusCount('IN_REVIEW')} }}
+          </p>
+        </a>
+
+        <a routerLink="/backoffice/orders" class="relative bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5 overflow-hidden hover:shadow-lg hover:border-indigo-200 transition-all">
+          <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-indigo-400"></div>
+          <div class="flex items-center justify-between mb-3">
+            <p class="text-sm font-semibold text-slate-500">{{ 'backoffice.dashboard.ordersRequiringAttention' | t }}</p>
+            <div class="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
+              <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25Z" /></svg>
+            </div>
+          </div>
+          <p class="text-3xl font-extrabold text-slate-900">{{ as_.pendingReviewCount }}</p>
+          <p class="text-xs text-slate-400 mt-2">{{ 'backoffice.dashboard.orderAttentionHint' | t }}</p>
+        </a>
+
+        <a routerLink="/backoffice/products" class="relative bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5 overflow-hidden hover:shadow-lg hover:border-red-200 transition-all">
+          <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-500 to-red-400"></div>
+          <div class="flex items-center justify-between mb-3">
+            <p class="text-sm font-semibold text-slate-500">{{ 'backoffice.dashboard.lowStockProducts' | t }}</p>
+            <div class="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center">
+              <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" /></svg>
+            </div>
+          </div>
+          <p class="text-3xl font-extrabold text-slate-900">{{ lowStockProducts().length }}</p>
+          <p class="text-xs text-slate-400 mt-2">{{ 'backoffice.dashboard.lowStockHint' | t }}</p>
+        </a>
+
+        @if (reconciliationSummary(); as recon) {
+          <a routerLink="/backoffice/inventory/reconciliation" class="relative bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5 overflow-hidden hover:shadow-lg hover:border-violet-200 transition-all">
+            <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-violet-500 to-violet-400"></div>
+            <div class="flex items-center justify-between mb-3">
+              <p class="text-sm font-semibold text-slate-500">{{ 'backoffice.dashboard.reconciliationFindings' | t }}</p>
+              <div class="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
+                <svg class="w-5 h-5 text-violet-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.5h6.75m0 0V20.25m0-6.75 2.326-2.326a3 3 0 0 1 4.243 0l2.931 2.931a3 3 0 0 1 0 4.243l-2.931 2.931a3 3 0 0 1-4.243 0L10.75 20.25m0-6.75 2.326 2.326m-6.826-9.076h8.25a2.25 2.25 0 0 1 2.25 2.25v1.5M6 6.75A2.25 2.25 0 0 0 3.75 9v8.25A2.25 2.25 0 0 0 6 19.5h1.5" /></svg>
+              </div>
+            </div>
+            <p class="text-3xl font-extrabold text-slate-900">{{ recon.ordersWithIssues }}</p>
+            <p class="text-xs text-slate-400 mt-2">
+              {{ 'backoffice.dashboard.reconciliationHint' | t:{autoFixable: recon.autoFixableOrders, manual: recon.manualReviewOrders} }}
+            </p>
+          </a>
+        }
+      </div>
+
+      @if (claimsNeedingReview() > 0 || as_.pendingReviewCount > 0 || lowStockProducts().length > 0 || reconciliationSummary()?.ordersWithIssues) {
+        <div class="space-y-3 mb-8">
+          @if (claimsNeedingReview() > 0) {
+            <app-alert-banner type="warning" [message]="claimReviewAlertMessage()">
+              <a routerLink="/backoffice/claims" class="mt-2 inline-flex items-center px-3.5 py-1.5 bg-amber-600 text-white rounded-lg text-xs font-semibold hover:bg-amber-500 cursor-pointer">
+                {{ 'backoffice.dashboard.reviewClaims' | t }}
+              </a>
+            </app-alert-banner>
+          }
+
+          @if (as_.pendingReviewCount > 0) {
+            <app-alert-banner type="info" [message]="ordersAttentionAlertMessage(as_.pendingReviewCount)">
+              <a routerLink="/backoffice/orders" class="mt-2 inline-flex items-center px-3.5 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-500 cursor-pointer">
+                {{ 'backoffice.dashboard.openOrders' | t }}
+              </a>
+            </app-alert-banner>
+          }
+
+          @if (lowStockProducts().length > 0) {
+            <app-alert-banner type="warning" [message]="lowStockAlertMessage(lowStockProducts().length)">
+              <a routerLink="/backoffice/inventory" class="mt-2 inline-flex items-center px-3.5 py-1.5 bg-amber-600 text-white rounded-lg text-xs font-semibold hover:bg-amber-500 cursor-pointer">
+                {{ 'backoffice.dashboard.reviewInventory' | t }}
+              </a>
+            </app-alert-banner>
+          }
+
+          @if (reconciliationSummary()?.ordersWithIssues) {
+            <app-alert-banner type="error" [message]="reconciliationAlertMessage(reconciliationSummary()!.ordersWithIssues)">
+              <a routerLink="/backoffice/inventory/reconciliation" class="mt-2 inline-flex items-center px-3.5 py-1.5 bg-red-600 text-white rounded-lg text-xs font-semibold hover:bg-red-500 cursor-pointer">
+                {{ 'backoffice.dashboard.openReconciliation' | t }}
+              </a>
+            </app-alert-banner>
+          }
+        </div>
+      }
     }
   }
 
@@ -132,7 +226,7 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
         <!-- Orders by Status -->
         <div class="bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5">
-          <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Orders by Status</h3>
+          <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">{{ 'backoffice.dashboard.ordersByStatus' | t }}</h3>
           <div class="space-y-2.5">
             @for (s of ds.ordersByStatus; track s.status) {
               <div class="flex items-center justify-between">
@@ -145,11 +239,11 @@
         <!-- Orders by Payment Method -->
         @if (ds.ordersByPaymentMethod.length > 0) {
           <div class="bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5">
-            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Payment Methods</h3>
+            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">{{ 'backoffice.dashboard.paymentMethods' | t }}</h3>
             <div class="space-y-2.5">
               @for (pm of ds.ordersByPaymentMethod; track pm.paymentMethod) {
                 <div class="flex items-center justify-between">
-                  <span class="text-sm text-slate-700 font-medium">{{ pm.paymentMethod === 'COD' ? 'Cash on Delivery' : 'PromptPay QR' }}</span>
+                  <span class="text-sm text-slate-700 font-medium">{{ ('enum.' + pm.paymentMethod) | t }}</span>
                   <span class="text-sm font-extrabold text-slate-900">{{ pm.count }}</span>
                 </div>
               }
@@ -163,18 +257,18 @@
     @if (ds.items.length > 0) {
       <div class="bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5 mb-8">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Today's Orders</h3>
-          <a routerLink="/backoffice/orders" class="text-xs font-semibold text-indigo-600 hover:text-indigo-500 transition-colors">View all →</a>
+          <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest">{{ 'backoffice.dashboard.todayOrdersTable' | t }}</h3>
+          <a routerLink="/backoffice/orders" class="text-xs font-semibold text-indigo-600 hover:text-indigo-500 transition-colors">{{ 'backoffice.dashboard.recentOrdersViewAll' | t }}</a>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b border-slate-100">
-                <th class="text-left py-2.5 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Order</th>
-                <th class="text-left py-2.5 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Customer</th>
-                <th class="text-left py-2.5 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status</th>
-                <th class="text-left py-2.5 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Payment</th>
-                <th class="text-right py-2.5 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Amount</th>
+                <th class="text-left py-2.5 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ 'common.order' | t }}</th>
+                <th class="text-left py-2.5 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ 'backoffice.dashboard.customerColumn' | t }}</th>
+                <th class="text-left py-2.5 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ 'common.status' | t }}</th>
+                <th class="text-left py-2.5 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ 'backoffice.dashboard.paymentColumn' | t }}</th>
+                <th class="text-right py-2.5 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ 'backoffice.dashboard.amountColumn' | t }}</th>
               </tr>
             </thead>
             <tbody>
@@ -185,7 +279,7 @@
                   </td>
                   <td class="py-2.5 px-3 text-slate-700">{{ item.customerName }}</td>
                   <td class="py-2.5 px-3"><app-status-badge [status]="item.status" /></td>
-                  <td class="py-2.5 px-3 text-slate-500 text-xs">{{ item.paymentMethod === 'COD' ? 'COD' : 'QR' }}</td>
+                  <td class="py-2.5 px-3 text-slate-500 text-xs">{{ ('enum.' + item.paymentMethod) | t }}</td>
                   <td class="py-2.5 px-3 text-right font-bold text-slate-900">{{ item.totalAmount | thaiBaht }}</td>
                 </tr>
               }
@@ -196,38 +290,46 @@
     }
 
     <!-- Staff: Quick Actions -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-8">
       <a routerLink="/backoffice/orders" class="group relative bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5 overflow-hidden hover:shadow-lg hover:border-indigo-200 transition-all">
         <div class="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-indigo-500 to-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
         <div class="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center mb-3 group-hover:bg-indigo-100 transition-colors">
           <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25Z" /></svg>
         </div>
-        <p class="text-sm font-bold text-slate-900">Manage Orders</p>
-        <p class="text-[10px] text-slate-400 mt-0.5">Review & process orders</p>
+        <p class="text-sm font-bold text-slate-900">{{ 'backoffice.dashboard.manageOrders' | t }}</p>
+        <p class="text-[10px] text-slate-400 mt-0.5">{{ 'backoffice.dashboard.manageOrdersHint' | t }}</p>
+      </a>
+      <a routerLink="/backoffice/claims" class="group relative bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5 overflow-hidden hover:shadow-lg hover:border-amber-200 transition-all">
+        <div class="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-500 to-amber-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center mb-3 group-hover:bg-amber-100 transition-colors">
+          <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.076-4.076a1.526 1.526 0 0 1 1.037-.443 48.282 48.282 0 0 0 5.68-.494c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" /></svg>
+        </div>
+        <p class="text-sm font-bold text-slate-900">{{ 'backoffice.claims.title' | t }}</p>
+        <p class="text-[10px] text-slate-400 mt-0.5">{{ 'backoffice.dashboard.claimsHint' | t }}</p>
+      </a>
+      <a routerLink="/backoffice/inventory" class="group relative bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5 overflow-hidden hover:shadow-lg hover:border-emerald-200 transition-all">
+        <div class="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500 to-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center mb-3 group-hover:bg-emerald-100 transition-colors">
+          <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3.75h18M3 7.5h18m-15 3.75h12a3 3 0 0 1 3 3v2.25a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V14.25a3 3 0 0 1 3-3Zm2.25 3.75h3m6 0h.75v.75H17.25v-.75Z" /></svg>
+        </div>
+        <p class="text-sm font-bold text-slate-900">{{ 'backoffice.inventory.title' | t }}</p>
+        <p class="text-[10px] text-slate-400 mt-0.5">{{ 'backoffice.dashboard.inventoryHint' | t }}</p>
       </a>
       <a routerLink="/backoffice/products" class="group relative bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5 overflow-hidden hover:shadow-lg hover:border-emerald-200 transition-all">
         <div class="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500 to-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
         <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center mb-3 group-hover:bg-emerald-100 transition-colors">
           <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" /></svg>
         </div>
-        <p class="text-sm font-bold text-slate-900">Products</p>
-        <p class="text-[10px] text-slate-400 mt-0.5">View product catalog</p>
+        <p class="text-sm font-bold text-slate-900">{{ 'common.products' | t }}</p>
+        <p class="text-[10px] text-slate-400 mt-0.5">{{ 'backoffice.dashboard.productsHint' | t }}</p>
       </a>
       <a routerLink="/backoffice/reports/daily-sales" class="group relative bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5 overflow-hidden hover:shadow-lg hover:border-amber-200 transition-all">
         <div class="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-500 to-amber-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
         <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center mb-3 group-hover:bg-amber-100 transition-colors">
           <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" /></svg>
         </div>
-        <p class="text-sm font-bold text-slate-900">Daily Sales</p>
-        <p class="text-[10px] text-slate-400 mt-0.5">View sales reports</p>
-      </a>
-      <a routerLink="/backoffice/categories" class="group relative bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5 overflow-hidden hover:shadow-lg hover:border-violet-200 transition-all">
-        <div class="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-violet-500 to-violet-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-        <div class="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center mb-3 group-hover:bg-violet-100 transition-colors">
-          <svg class="w-5 h-5 text-violet-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6Z" /></svg>
-        </div>
-        <p class="text-sm font-bold text-slate-900">Categories</p>
-        <p class="text-[10px] text-slate-400 mt-0.5">Manage categories</p>
+        <p class="text-sm font-bold text-slate-900">{{ 'backoffice.dailySales' | t }}</p>
+        <p class="text-[10px] text-slate-400 mt-0.5">{{ 'backoffice.dashboard.dailySalesHint' | t }}</p>
       </a>
     </div>
   }
@@ -238,7 +340,7 @@
       <!-- Revenue Trend (30 days) — CSS bar chart -->
       @if (revenueTrend().length > 0) {
         <div class="lg:col-span-2 bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5">
-          <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-5">Revenue Trend (30 days)</h3>
+          <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-5">{{ 'backoffice.dashboard.revenueTrend' | t }}</h3>
           <div class="flex items-end gap-1 h-40">
             @for (point of revenueTrend(); track point.date) {
               <div class="flex-1 flex flex-col items-center gap-1 group relative">
@@ -250,7 +352,7 @@
                 <div class="absolute bottom-full mb-2 hidden group-hover:block z-10">
                   <div class="bg-slate-900 text-white text-[10px] px-2 py-1.5 rounded-lg shadow-lg whitespace-nowrap">
                     <p class="font-bold">{{ point.revenue | thaiBaht }}</p>
-                    <p class="text-slate-400">{{ point.orderCount }} orders</p>
+                    <p class="text-slate-400">{{ 'backoffice.dashboard.orderCount' | t:{count: point.orderCount} }}</p>
                     <p class="text-slate-400">{{ formatShortDate(point.date) }}</p>
                   </div>
                 </div>
@@ -269,14 +371,14 @@
       <!-- Top Products -->
       @if (topProducts().length > 0) {
         <div class="bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5">
-          <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Top Products</h3>
+          <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">{{ 'backoffice.dashboard.topProducts' | t }}</h3>
           <div class="space-y-3">
             @for (p of topProducts(); track p.productId; let i = $index) {
               <div class="flex items-center gap-3">
                 <span class="w-6 h-6 rounded-lg bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 shrink-0">{{ i + 1 }}</span>
                 <div class="flex-1 min-w-0">
                   <p class="text-sm font-semibold text-slate-900 truncate">{{ p.productName }}</p>
-                  <p class="text-[10px] text-slate-400 text-mono">{{ p.sku }} · {{ p.totalQuantitySold }} sold</p>
+                  <p class="text-[10px] text-slate-400 text-mono">{{ 'backoffice.dashboard.categorySummary' | t:{sku: p.sku, category: ('backoffice.dashboard.soldCount' | t:{count: p.totalQuantitySold})} }}</p>
                 </div>
                 <span class="text-xs font-bold text-emerald-700 shrink-0">{{ p.totalRevenue | thaiBaht }}</span>
               </div>
@@ -290,7 +392,7 @@
     @if (analyticsSummary(); as as_) {
       @if (as_.ordersByStatus.length > 0) {
         <div class="bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5 mb-8">
-          <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Orders by Status</h3>
+          <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">{{ 'backoffice.dashboard.ordersByStatus' | t }}</h3>
           <div class="flex flex-wrap gap-3">
             @for (s of as_.ordersByStatus; track s.status) {
               <div class="flex items-center gap-2 bg-slate-50 rounded-xl px-3 py-2">
@@ -304,13 +406,43 @@
     }
 
     <!-- Admin: Recent Orders + Low Stock side by side -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-8">
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-5 mb-8">
+      @if (recentInventoryTransactions().length > 0) {
+        <div class="bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest">{{ 'backoffice.dashboard.recentInventoryActivity' | t }}</h3>
+            <a routerLink="/backoffice/inventory" class="text-xs font-semibold text-indigo-600 hover:text-indigo-500 transition-colors">{{ 'backoffice.dashboard.recentInventoryViewAll' | t }}</a>
+          </div>
+          <div class="space-y-3">
+            @for (transaction of recentInventoryTransactions(); track transaction.id) {
+              <a [routerLink]="['/backoffice/inventory/products', transaction.productId]" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors group">
+                <div class="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center shrink-0 group-hover:bg-emerald-50 transition-colors">
+                  <svg class="w-4 h-4 text-slate-500 group-hover:text-emerald-600 transition-colors" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3.75h18M3 7.5h18m-15 3.75h12a3 3 0 0 1 3 3v2.25a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V14.25a3 3 0 0 1 3-3Zm2.25 3.75h3m6 0h.75v.75H17.25v-.75Z" /></svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-sm font-bold text-slate-900 truncate">{{ transaction.product.name }}</span>
+                    <app-status-badge [status]="transaction.type" />
+                  </div>
+                  <p class="text-[10px] text-slate-400 mt-0.5">
+                    {{ transaction.product.sku }} / {{ relativeTime(transaction.createdAt) }}
+                  </p>
+                </div>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold shrink-0" [class]="inventoryQuantityClass(transaction)">
+                  {{ inventoryQuantityLabel(transaction) }}
+                </span>
+              </a>
+            }
+          </div>
+        </div>
+      }
+
       <!-- Recent Orders -->
       @if (recentOrders().length > 0) {
         <div class="bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5">
           <div class="flex items-center justify-between mb-4">
-            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Recent Orders</h3>
-            <a routerLink="/backoffice/orders" class="text-xs font-semibold text-indigo-600 hover:text-indigo-500 transition-colors">View all →</a>
+            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest">{{ 'backoffice.dashboard.recentOrders' | t }}</h3>
+            <a routerLink="/backoffice/orders" class="text-xs font-semibold text-indigo-600 hover:text-indigo-500 transition-colors">{{ 'backoffice.dashboard.recentOrdersViewAll' | t }}</a>
           </div>
           <div class="space-y-3">
             @for (order of recentOrders(); track order.id) {
@@ -323,7 +455,7 @@
                     <span class="text-sm font-bold text-slate-900">{{ order.orderNumber }}</span>
                     <app-status-badge [status]="order.status" />
                   </div>
-                  <p class="text-[10px] text-slate-400 mt-0.5">{{ order.customerName }} · {{ order.itemCount }} items · {{ relativeTime(order.createdAt) }}</p>
+                  <p class="text-[10px] text-slate-400 mt-0.5">{{ 'backoffice.dashboard.orderSummary' | t:{customer: order.customerName, count: order.itemCount, time: relativeTime(order.createdAt)} }}</p>
                 </div>
                 <span class="text-sm font-bold text-slate-900 shrink-0">{{ order.totalAmount | thaiBaht }}</span>
               </a>
@@ -337,10 +469,10 @@
         <div class="bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5">
           <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-2">
-              <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Low Stock Alert</h3>
+              <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest">{{ 'backoffice.dashboard.lowStockAlertTitle' | t }}</h3>
               <span class="px-1.5 py-0.5 text-[10px] font-bold text-red-700 bg-red-50 rounded-full">{{ lowStockProducts().length }}</span>
             </div>
-            <a routerLink="/backoffice/products" class="text-xs font-semibold text-indigo-600 hover:text-indigo-500 transition-colors">View all →</a>
+            <a routerLink="/backoffice/products" class="text-xs font-semibold text-indigo-600 hover:text-indigo-500 transition-colors">{{ 'backoffice.dashboard.recentOrdersViewAll' | t }}</a>
           </div>
           <div class="space-y-3">
             @for (product of lowStockProducts(); track product.id) {
@@ -356,11 +488,11 @@
                 </div>
                 <div class="flex-1 min-w-0">
                   <p class="text-sm font-semibold text-slate-900 truncate">{{ product.name }}</p>
-                  <p class="text-[10px] text-slate-400">{{ product.sku }} · {{ product.categoryName }}</p>
+                  <p class="text-[10px] text-slate-400">{{ 'backoffice.dashboard.categorySummary' | t:{sku: product.sku, category: product.categoryName} }}</p>
                 </div>
                 <div class="text-right shrink-0">
                   <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold" [class]="stockLevelClass(product.stock)">
-                    {{ product.stock }} left
+                    {{ 'backoffice.dashboard.remainingStock' | t:{count: product.stock} }}
                   </span>
                 </div>
               </div>
@@ -371,48 +503,48 @@
     </div>
 
     <!-- Admin: Quick Actions -->
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
+    <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 mb-8">
       <a routerLink="/backoffice/orders" class="group relative bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-4 overflow-hidden hover:shadow-lg hover:border-indigo-200 transition-all text-center">
         <div class="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-indigo-500 to-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
         <div class="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center mx-auto mb-2 group-hover:bg-indigo-100 transition-colors">
           <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25Z" /></svg>
         </div>
-        <p class="text-xs font-bold text-slate-900">Orders</p>
+        <p class="text-xs font-bold text-slate-900">{{ 'backoffice.orders' | t }}</p>
+      </a>
+      <a routerLink="/backoffice/claims" class="group relative bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-4 overflow-hidden hover:shadow-lg hover:border-amber-200 transition-all text-center">
+        <div class="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-500 to-amber-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center mx-auto mb-2 group-hover:bg-amber-100 transition-colors">
+          <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.076-4.076a1.526 1.526 0 0 1 1.037-.443 48.282 48.282 0 0 0 5.68-.494c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" /></svg>
+        </div>
+        <p class="text-xs font-bold text-slate-900">{{ 'backoffice.claims.title' | t }}</p>
+      </a>
+      <a routerLink="/backoffice/inventory" class="group relative bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-4 overflow-hidden hover:shadow-lg hover:border-emerald-200 transition-all text-center">
+        <div class="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500 to-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center mx-auto mb-2 group-hover:bg-emerald-100 transition-colors">
+          <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3.75h18M3 7.5h18m-15 3.75h12a3 3 0 0 1 3 3v2.25a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V14.25a3 3 0 0 1 3-3Zm2.25 3.75h3m6 0h.75v.75H17.25v-.75Z" /></svg>
+        </div>
+        <p class="text-xs font-bold text-slate-900">{{ 'backoffice.inventory.title' | t }}</p>
+      </a>
+      <a routerLink="/backoffice/inventory/reconciliation" class="group relative bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-4 overflow-hidden hover:shadow-lg hover:border-violet-200 transition-all text-center">
+        <div class="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-violet-500 to-violet-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        <div class="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center mx-auto mb-2 group-hover:bg-violet-100 transition-colors">
+          <svg class="w-5 h-5 text-violet-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.5h6.75m0 0V20.25m0-6.75 2.326-2.326a3 3 0 0 1 4.243 0l2.931 2.931a3 3 0 0 1 0 4.243l-2.931 2.931a3 3 0 0 1-4.243 0L10.75 20.25m0-6.75 2.326 2.326m-6.826-9.076h8.25a2.25 2.25 0 0 1 2.25 2.25v1.5M6 6.75A2.25 2.25 0 0 0 3.75 9v8.25A2.25 2.25 0 0 0 6 19.5h1.5" /></svg>
+        </div>
+        <p class="text-xs font-bold text-slate-900">{{ 'backoffice.reconciliation' | t }}</p>
       </a>
       <a routerLink="/backoffice/products" class="group relative bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-4 overflow-hidden hover:shadow-lg hover:border-emerald-200 transition-all text-center">
         <div class="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500 to-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
         <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center mx-auto mb-2 group-hover:bg-emerald-100 transition-colors">
           <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" /></svg>
         </div>
-        <p class="text-xs font-bold text-slate-900">Products</p>
-      </a>
-      <a routerLink="/backoffice/categories" class="group relative bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-4 overflow-hidden hover:shadow-lg hover:border-amber-200 transition-all text-center">
-        <div class="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-500 to-amber-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-        <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center mx-auto mb-2 group-hover:bg-amber-100 transition-colors">
-          <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6Z" /></svg>
-        </div>
-        <p class="text-xs font-bold text-slate-900">Categories</p>
-      </a>
-      <a routerLink="/backoffice/brands" class="group relative bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-4 overflow-hidden hover:shadow-lg hover:border-violet-200 transition-all text-center">
-        <div class="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-violet-500 to-violet-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-        <div class="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center mx-auto mb-2 group-hover:bg-violet-100 transition-colors">
-          <svg class="w-5 h-5 text-violet-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" /></svg>
-        </div>
-        <p class="text-xs font-bold text-slate-900">Brands</p>
-      </a>
-      <a routerLink="/backoffice/users" class="group relative bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-4 overflow-hidden hover:shadow-lg hover:border-sky-200 transition-all text-center">
-        <div class="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-sky-500 to-sky-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-        <div class="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center mx-auto mb-2 group-hover:bg-sky-100 transition-colors">
-          <svg class="w-5 h-5 text-sky-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" /></svg>
-        </div>
-        <p class="text-xs font-bold text-slate-900">Users</p>
+        <p class="text-xs font-bold text-slate-900">{{ 'common.products' | t }}</p>
       </a>
       <a routerLink="/backoffice/analytics" class="group relative bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-4 overflow-hidden hover:shadow-lg hover:border-rose-200 transition-all text-center">
         <div class="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-rose-500 to-rose-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
         <div class="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center mx-auto mb-2 group-hover:bg-rose-100 transition-colors">
           <svg class="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" /></svg>
         </div>
-        <p class="text-xs font-bold text-slate-900">Analytics</p>
+        <p class="text-xs font-bold text-slate-900">{{ 'backoffice.analytics' | t }}</p>
       </a>
     </div>
   }

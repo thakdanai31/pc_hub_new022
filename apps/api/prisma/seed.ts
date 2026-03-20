@@ -1,8 +1,37 @@
+import { config } from "dotenv";
+import path from "node:path";
+import fs from "node:fs";
+import { fileURLToPath } from "node:url";
 import { PrismaClient } from "../src/generated/prisma/client.js";
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 import bcrypt from "bcryptjs";
 
 const SALT_ROUNDS = 12;
+
+function findEnvFile(): string | undefined {
+  const cwdEnv = path.join(process.cwd(), ".env");
+  if (fs.existsSync(cwdEnv)) {
+    return cwdEnv;
+  }
+
+  let dir = path.dirname(fileURLToPath(import.meta.url));
+  const root = path.parse(dir).root;
+
+  while (dir !== root) {
+    const envPath = path.join(dir, ".env");
+    if (fs.existsSync(envPath)) {
+      return envPath;
+    }
+    dir = path.dirname(dir);
+  }
+
+  return undefined;
+}
+
+const envFile = findEnvFile();
+if (envFile) {
+  config({ path: envFile });
+}
 
 function getDatabaseUrl(): string {
   const url = process.env["DATABASE_URL"];

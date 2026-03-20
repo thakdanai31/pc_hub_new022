@@ -11,6 +11,10 @@ const MOCK_USER = {
   phoneNumber: '0812345678',
   role: 'STAFF',
   isActive: true,
+  bannedUntil: null,
+  banReason: null,
+  bannedAt: null,
+  bannedByUserId: null,
   createdAt: '2026-01-01T00:00:00.000Z',
 };
 
@@ -41,6 +45,21 @@ describe('BackofficeUserService', () => {
     );
     expect(req.request.method).toBe('GET');
     req.flush({ success: true, data: [MOCK_USER], pagination: { page: 1, limit: 20, total: 1, totalPages: 1 } });
+  });
+
+  it('supports the CUSTOMER role filter', () => {
+    service.listUsers({ role: 'CUSTOMER' }).subscribe();
+
+    const req = httpTesting.expectOne((r) =>
+      r.url.includes('/backoffice/users') &&
+      r.params.get('role') === 'CUSTOMER',
+    );
+    expect(req.request.method).toBe('GET');
+    req.flush({
+      success: true,
+      data: [{ ...MOCK_USER, role: 'CUSTOMER' }],
+      pagination: { page: 1, limit: 20, total: 1, totalPages: 1 },
+    });
   });
 
   it('creates a staff user', () => {
@@ -75,12 +94,47 @@ describe('BackofficeUserService', () => {
     req.flush({ success: true, data: { ...MOCK_USER, firstName: 'Updated' } });
   });
 
-  it('disables a user', () => {
+  it('disables a user permanently by default', () => {
     service.disableUser(1).subscribe();
 
     const req = httpTesting.expectOne((r) =>
       r.url.includes('/backoffice/users/1/disable') && r.method === 'POST',
     );
+    expect(req.request.body).toEqual({});
     req.flush({ success: true, data: { ...MOCK_USER, isActive: false } });
+  });
+
+  it('sends temporary ban metadata when provided', () => {
+    const body = {
+      bannedUntil: '2026-03-21T10:00:00.000Z',
+      banReason: 'Chargeback review',
+    };
+
+    service.disableUser(1, body).subscribe();
+
+    const req = httpTesting.expectOne((r) =>
+      r.url.includes('/backoffice/users/1/disable') && r.method === 'POST',
+    );
+    expect(req.request.body).toEqual(body);
+    req.flush({
+      success: true,
+      data: {
+        ...MOCK_USER,
+        isActive: false,
+        bannedUntil: body.bannedUntil,
+        banReason: body.banReason,
+        bannedAt: '2026-03-20T10:00:00.000Z',
+        bannedByUserId: 99,
+      },
+    });
+  });
+
+  it('enables a user', () => {
+    service.enableUser(1).subscribe();
+
+    const req = httpTesting.expectOne((r) =>
+      r.url.includes('/backoffice/users/1/enable') && r.method === 'POST',
+    );
+    req.flush({ success: true, data: { ...MOCK_USER, isActive: true } });
   });
 });

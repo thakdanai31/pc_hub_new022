@@ -3,6 +3,7 @@ import { verifyAccessToken } from '../utils/token.js';
 import type { AccessTokenPayload } from '../utils/token.js';
 import { sendError } from '../common/response.js';
 import { AppError } from '../common/errors.js';
+import { restoreExpiredTemporaryBanIfNeeded } from '../modules/auth/auth.service.js';
 
 function extractToken(req: Request): string | null {
   const header = req.headers.authorization;
@@ -16,7 +17,7 @@ export function requireAuth(
   req: Request,
   res: Response,
   next: NextFunction,
-): void {
+): Promise<void> {
   const token = extractToken(req);
   if (!token) {
     sendError({
@@ -25,12 +26,11 @@ export function requireAuth(
       code: 'UNAUTHORIZED',
       statusCode: 401,
     });
-    return;
+    return Promise.resolve();
   }
 
   try {
     req.user = verifyAccessToken(token);
-    next();
   } catch {
     sendError({
       res,
@@ -38,7 +38,32 @@ export function requireAuth(
       code: 'UNAUTHORIZED',
       statusCode: 401,
     });
+    return Promise.resolve();
   }
+
+  return restoreExpiredTemporaryBanIfNeeded(req.user.userId).then((user) => {
+    if (!user) {
+      sendError({
+        res,
+        message: 'Invalid or expired token',
+        code: 'UNAUTHORIZED',
+        statusCode: 401,
+      });
+      return;
+    }
+
+    if (!user.isActive) {
+      sendError({
+        res,
+        message: 'Account disabled',
+        code: 'ACCOUNT_DISABLED',
+        statusCode: 401,
+      });
+      return;
+    }
+
+    next();
+  }).catch(next);
 }
 
 /**

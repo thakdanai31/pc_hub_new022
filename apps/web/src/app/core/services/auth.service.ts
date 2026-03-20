@@ -19,6 +19,20 @@ interface LoginPayload {
   password: string;
 }
 
+interface ForgotPasswordPayload {
+  email: string;
+}
+
+interface ForgotPasswordResponseData {
+  resetLink: string;
+  expiresAt: string;
+}
+
+interface ResetPasswordPayload {
+  token: string;
+  password: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
@@ -52,6 +66,20 @@ export class AuthService {
         withCredentials: true,
       })
       .pipe(tap((res) => this.handleAuthResponse(res)));
+  }
+
+  requestPasswordReset(payload: ForgotPasswordPayload) {
+    return this.http.post<ApiResponse<ForgotPasswordResponseData | null>>(
+      `${this.apiUrl}/auth/forgot-password`,
+      payload,
+    );
+  }
+
+  resetPassword(payload: ResetPasswordPayload) {
+    return this.http.post<ApiResponse<null>>(
+      `${this.apiUrl}/auth/reset-password`,
+      payload,
+    );
   }
 
   refresh() {

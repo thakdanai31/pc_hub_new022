@@ -40,6 +40,13 @@ export async function rejectOrder(req: Request, res: Response) {
   sendSuccess({ res, message: 'Order rejected', data: result });
 }
 
+export async function cancelOrder(req: Request, res: Response) {
+  const { orderId } = orderIdParamSchema.parse(req.params);
+  const { reason } = rejectBodySchema.parse(req.body);
+  const result = await orderService.cancelOrder(orderId, getAuthUser(req).userId, reason);
+  sendSuccess({ res, message: 'Order cancelled', data: result });
+}
+
 export async function advanceStatus(req: Request, res: Response) {
   const { orderId } = orderIdParamSchema.parse(req.params);
   const { status } = advanceStatusBodySchema.parse(req.body);

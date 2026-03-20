@@ -58,12 +58,16 @@ npx prisma generate
 npx prisma migrate deploy
 ```
 
+Use `prisma migrate deploy` only for a fresh database or for a database that is already tracked by Prisma migration history. If you are deploying to an existing non-empty database that predates the current migration chain, baseline it first instead of blindly running `migrate resolve`.
+
 ### 5. Seed sample data (optional)
 
 ```bash
 cd apps/api
 npm run db:seed
 ```
+
+For staging or manual smoke testing, seeding is the fastest way to provision an initial `ADMIN`, `STAFF`, and `CUSTOMER` account plus sample products. For production, make sure you have a deliberate privileged-user provisioning plan before go-live.
 
 Seeds 3 users, 6 categories, 6 brands, and 12 products. See [Seed Data](#seed-data) for details.
 
@@ -229,14 +233,35 @@ These variables are required on any platform (Railway, Docker, or local):
 | `PORT`                     | No       | `3000`        | API server port (Railway sets this automatically)          |
 | `NODE_ENV`                 | No       | `development` | `development`, `test`, or `production`                     |
 | `CORS_ORIGIN`              | Yes      | —             | Allowed CORS origin (must not be `*` in production)        |
+| `APP_WEB_URL`              | No       | `CORS_ORIGIN` | Web base URL used to build password reset links            |
 | `JWT_ACCESS_SECRET`        | Yes      | —             | Access token signing secret (min 32 chars)                 |
 | `JWT_REFRESH_SECRET`       | Yes      | —             | Refresh token signing secret (min 32 chars)                |
 | `JWT_ACCESS_EXPIRES`       | No       | `15m`         | Access token expiry                                        |
 | `JWT_REFRESH_EXPIRES_DAYS` | No       | `7`           | Refresh token expiry in days                               |
+| `MAIL_FROM`                | No       | —             | Sender address/name for password reset emails              |
+| `SMTP_HOST`                | No       | —             | SMTP host for password reset email delivery                |
+| `SMTP_PORT`                | No       | —             | SMTP port for password reset email delivery                |
+| `SMTP_SECURE`              | No       | `false`       | Set to `true` for SMTPS / port 465                         |
+| `SMTP_USER`                | No       | —             | SMTP username (optional if relay does not require auth)    |
+| `SMTP_PASS`                | No       | —             | SMTP password (must be set together with `SMTP_USER`)      |
 | `CLOUDINARY_CLOUD_NAME`    | No       | —             | Cloudinary cloud name                                      |
 | `CLOUDINARY_API_KEY`       | No       | —             | Cloudinary API key                                         |
 | `CLOUDINARY_API_SECRET`    | No       | —             | Cloudinary API secret                                      |
 | `PROMPTPAY_ID`             | No       | —             | PromptPay ID for QR generation                             |
+
+### Password Reset Email Delivery
+
+- In `production`, `APP_WEB_URL`, `MAIL_FROM`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, and `SMTP_PASS` must be configured so the forgot-password flow can send real reset emails.
+- In non-production environments, the API keeps returning a debug `resetLink` for local/manual verification. If SMTP is configured there as well, it will send the email and still include the debug link in the response.
+- Reset tokens are still stored only as hashes, expire automatically, and remain single-use.
+- For Brevo SMTP, use:
+  - `SMTP_HOST=smtp-relay.brevo.com`
+  - `SMTP_PORT=587`
+  - `SMTP_SECURE=false`
+  - `SMTP_USER=<your exact Brevo SMTP login email>`
+  - `SMTP_PASS=<your Brevo SMTP key>`
+- Do not use the Brevo REST API key as `SMTP_PASS`.
+- `MAIL_FROM` should use a sender address or domain that is verified in your Brevo account.
 
 ## Testing
 

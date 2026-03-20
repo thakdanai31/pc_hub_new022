@@ -38,31 +38,58 @@ enum PaymentStatus {
   REJECTED
 }
 
+enum ClaimStatus {
+  PENDING
+  IN_REVIEW
+  SENT_TO_MANUFACTURER
+  COMPLETED
+  REJECTED
+}
+
+enum InventoryTransactionType {
+  RESTOCK
+  SALE
+  ADJUSTMENT_IN
+  ADJUSTMENT_OUT
+  RETURN_IN
+  RETURN_OUT
+}
+
 model User {
-  id           Int      @id @default(autoincrement())
-  firstName    String
-  lastName     String
-  email        String   @unique
-  phoneNumber  String
-  passwordHash String
-  role         UserRole @default(CUSTOMER)
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id             Int       @id @default(autoincrement())
+  firstName      String
+  lastName       String
+  email          String    @unique
+  phoneNumber    String    @unique
+  passwordHash   String
+  role           UserRole  @default(CUSTOMER)
+  isActive       Boolean   @default(true)
+  bannedUntil    DateTime?
+  banReason      String?   @db.VarChar(500)
+  bannedAt       DateTime?
+  bannedByUserId Int?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   addresses     Address[]
   refreshTokens RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
   cart          Cart?
   orders        Order[]
+  claims        Claim[]
+  bannedBy      User?      @relation("UserBannedBy", fields: [bannedByUserId], references: [id])
+  bannedUsers   User[]     @relation("UserBannedBy")
 
   approvedOrders  Order[] @relation("OrderApprovedBy")
   rejectedOrders  Order[] @relation("OrderRejectedBy")
+  cancelledOrders Order[] @relation("OrderCancelledBy")
   reviewedPayments Payment[] @relation("PaymentReviewedBy")
   uploadedSlips   PaymentSlip[] @relation("SlipUploadedBy")
   auditLogs       AuditLog[] @relation("AuditActor")
 
   @@index([role])
   @@index([isActive])
+  @@index([bannedByUserId])
 }
 
 model Address {
@@ -104,6 +131,21 @@ model RefreshToken {
   @@index([userId])
   @@index([expiresAt])
   @@index([revokedAt])
+}
+
+model PasswordResetToken {
+  id         Int       @id @default(autoincrement())
+  userId     Int
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@index([usedAt])
 }
 
 model Category {
@@ -159,6 +201,8 @@ model Product {
   images     ProductImage[]
   cartItems  CartItem[]
   orderItems OrderItem[]
+  claims     Claim[]
+  inventoryTransactions InventoryTransaction[]
 
   @@index([categoryId])
   @@index([brandId])
@@ -179,6 +223,23 @@ model ProductImage {
 
   @@index([productId])
   @@index([productId, sortOrder])
+}
+
+model InventoryTransaction {
+  id          Int                      @id @default(autoincrement())
+  productId   Int
+  type        InventoryTransactionType
+  quantity    Int
+  referenceId Int?
+  note        String?                  @db.Text
+  createdAt   DateTime                 @default(now())
+
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([productId])
+  @@index([type])
+  @@index([createdAt])
+  @@index([referenceId])
 }
 
 model Cart {
@@ -223,14 +284,19 @@ model Order {
   rejectedByUserId Int?
   rejectedAt       DateTime?
   rejectReason     String?      @db.VarChar(500)
+  cancelledByUserId Int?
+  cancelledAt       DateTime?
+  cancelReason      String?     @db.VarChar(500)
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
   user       User        @relation(fields: [userId], references: [id])
   approvedBy User?       @relation("OrderApprovedBy", fields: [approvedByUserId], references: [id])
   rejectedBy User?       @relation("OrderRejectedBy", fields: [rejectedByUserId], references: [id])
+  cancelledBy User?      @relation("OrderCancelledBy", fields: [cancelledByUserId], references: [id])
   items      OrderItem[]
   payment    Payment?
+  claims     Claim[]
 
   @@index([userId])
   @@index([status])
@@ -253,6 +319,28 @@ model OrderItem {
 
   @@index([orderId])
   @@index([productId])
+}
+
+model Claim {
+  id               Int         @id @default(autoincrement())
+  userId           Int
+  orderId          Int
+  productId        Int
+  issueDescription String      @db.Text
+  status           ClaimStatus @default(PENDING)
+  adminNote        String?     @db.Text
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id])
+  order   Order   @relation(fields: [orderId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([userId])
+  @@index([orderId])
+  @@index([productId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model Payment {

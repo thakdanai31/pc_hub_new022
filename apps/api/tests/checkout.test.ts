@@ -177,7 +177,7 @@ describe('POST /api/v1/checkout/cart', () => {
     expect(res.body.data.paymentMethod).toBe('PROMPTPAY_QR');
   });
 
-  it('decrements stock after checkout', async () => {
+  it('does not decrement stock after checkout', async () => {
     await request(app)
       .post('/api/v1/cart/items')
       .set('Authorization', `Bearer ${token}`)
@@ -189,7 +189,7 @@ describe('POST /api/v1/checkout/cart', () => {
       .send({ addressId, paymentMethod: 'COD' });
 
     const product = await prisma.product.findUnique({ where: { id: productId } });
-    expect(product?.stock).toBe(3);
+    expect(product?.stock).toBe(5);
   });
 
   it('clears cart after checkout', async () => {
@@ -348,7 +348,7 @@ describe('POST /api/v1/checkout/buy-now', () => {
     expect(res.body.data.totalAmount).toBe(59900);
   });
 
-  it('decrements stock', async () => {
+  it('does not decrement stock before the order is committed', async () => {
     await request(app)
       .post('/api/v1/checkout/buy-now')
       .set('Authorization', `Bearer ${token}`)
@@ -360,7 +360,7 @@ describe('POST /api/v1/checkout/buy-now', () => {
       });
 
     const product = await prisma.product.findUnique({ where: { id: productId } });
-    expect(product?.stock).toBe(3);
+    expect(product?.stock).toBe(5);
   });
 
   it('rejects non-existent product', async () => {

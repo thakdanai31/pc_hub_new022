@@ -2,19 +2,22 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { OrderService } from '../../core/services/order.service';
+import { LanguageService } from '../../core/services/language.service';
 import { ThaiBahtPipe } from '../../shared/pipes/thai-baht.pipe';
 import { StatusBadge } from '../../shared/components/status-badge/status-badge';
 import { AlertBanner } from '../../shared/components/alert-banner/alert-banner';
+import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 import type { OrderDetail, PromptPayQR } from '../../shared/models/order.model';
 
 @Component({
   selector: 'app-order-detail',
-  imports: [RouterLink, DatePipe, ThaiBahtPipe, StatusBadge, AlertBanner],
+  imports: [RouterLink, DatePipe, ThaiBahtPipe, StatusBadge, AlertBanner, TranslatePipe],
   templateUrl: './order-detail.html',
 })
 export class OrderDetailPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly orderService = inject(OrderService);
+  protected readonly language = inject(LanguageService);
 
   readonly loading = signal(true);
   readonly error = signal('');
@@ -32,7 +35,7 @@ export class OrderDetailPage implements OnInit {
   ngOnInit() {
     const orderId = Number(this.route.snapshot.params['orderId']);
     if (!orderId || isNaN(orderId)) {
-      this.error.set('Invalid order ID');
+      this.error.set(this.language.translate('storefront.orders.detail.invalidOrder'));
       this.loading.set(false);
       return;
     }
@@ -65,7 +68,9 @@ export class OrderDetailPage implements OnInit {
       },
       error: () => {
         this.uploading.set(false);
-        this.uploadError.set('Failed to upload slip. Please try again.');
+        this.uploadError.set(
+          this.language.translate('storefront.orders.detail.uploadSlipError'),
+        );
       },
     });
   }
@@ -85,7 +90,7 @@ export class OrderDetailPage implements OnInit {
         }
       },
       error: () => {
-        this.error.set('Order not found.');
+        this.error.set(this.language.translate('storefront.orders.detail.notFound'));
         this.loading.set(false);
       },
     });
@@ -99,7 +104,7 @@ export class OrderDetailPage implements OnInit {
         this.qrLoading.set(false);
       },
       error: () => {
-        this.qrError.set('Failed to load QR code.');
+        this.qrError.set(this.language.translate('storefront.orders.detail.loadQrError'));
         this.qrLoading.set(false);
       },
     });

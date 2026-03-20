@@ -1,0 +1,115 @@
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+  <nav class="flex items-center gap-2 text-sm mb-8 animate-fade-up">
+    @if (order(); as o) {
+      <a [routerLink]="['/account/orders', o.id]" class="text-slate-500 hover:text-indigo-600 transition-colors inline-flex items-center gap-1">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
+        {{ 'storefront.claims.create.backToOrder' | t }}
+      </a>
+    } @else {
+      <a routerLink="/account/orders" class="text-slate-500 hover:text-indigo-600 transition-colors inline-flex items-center gap-1">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
+        {{ 'storefront.claims.create.backToOrders' | t }}
+      </a>
+    }
+  </nav>
+
+  <div class="mb-8">
+    <h1 class="text-heading text-2xl sm:text-3xl text-slate-900">{{ 'storefront.claims.create.title' | t }}</h1>
+    <p class="mt-1.5 text-sm text-slate-500">{{ 'storefront.claims.create.subtitle' | t }}</p>
+  </div>
+
+  @if (loading()) {
+    <div class="space-y-5">
+      <div class="h-40 bg-slate-200 rounded-2xl shimmer"></div>
+      <div class="h-56 bg-slate-200 rounded-2xl shimmer"></div>
+    </div>
+  } @else if (createdClaim(); as created) {
+    <div class="bg-white rounded-2xl shadow-md border border-slate-200/60 p-6">
+      <app-alert-banner type="success" [message]="'storefront.claims.create.submittedSuccess' | t" />
+      <div class="mt-5 rounded-2xl border border-emerald-200/70 bg-emerald-50/70 p-4">
+        <div class="flex items-center gap-3 flex-wrap">
+          <p class="text-sm font-bold text-slate-900">{{ 'storefront.claims.create.submittedTitle' | t }}</p>
+          <app-status-badge [status]="created.status" />
+        </div>
+        <p class="mt-2 text-sm text-slate-600">{{ created.product.name }}</p>
+      </div>
+      <div class="mt-5 flex flex-col sm:flex-row gap-3">
+        <a [routerLink]="['/account/claims', created.id]" class="btn-primary rounded-xl px-5 py-2.5 text-sm inline-flex justify-center">
+          {{ 'storefront.claims.create.viewClaimDetails' | t }}
+        </a>
+        <a routerLink="/account/claims" class="btn-secondary rounded-xl px-5 py-2.5 text-sm inline-flex justify-center">
+          {{ 'storefront.claims.create.viewAllClaims' | t }}
+        </a>
+      </div>
+    </div>
+  } @else {
+    @if (error()) {
+      <div class="mb-5">
+        <app-alert-banner type="error" [message]="error()" />
+      </div>
+    }
+
+    @if (order(); as o) {
+      @if (item(); as selectedItem) {
+        <div class="bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5 mb-5">
+          <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div>
+              <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">{{ 'storefront.claims.create.selectedProduct' | t }}</p>
+              <p class="text-base font-semibold text-slate-900">{{ selectedItem.productSnapshot['name'] }}</p>
+              <p class="mt-1 text-xs font-mono text-slate-400">{{ selectedItem.productSnapshot['sku'] }}</p>
+              <p class="mt-3 text-sm text-slate-500">
+                {{ 'common.order' | t }}
+                <a [routerLink]="['/account/orders', o.id]" class="font-semibold text-indigo-600 hover:text-indigo-500">{{ o.orderNumber }}</a>
+              </p>
+            </div>
+            <div class="text-right text-sm shrink-0">
+              <app-status-badge [status]="o.status" />
+              <p class="mt-3 text-slate-500">{{ selectedItem.quantity }} x {{ selectedItem.unitPrice | thaiBaht }}</p>
+              <p class="font-bold text-slate-900 mt-0.5">{{ selectedItem.lineTotal | thaiBaht }}</p>
+            </div>
+          </div>
+        </div>
+
+        @if (o.status === 'DELIVERED') {
+          <div class="bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-5">
+            <label for="issue-description" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+              {{ 'storefront.claims.create.issueDescription' | t }}
+            </label>
+            <textarea
+              id="issue-description"
+              [(ngModel)]="issueDescription"
+              rows="8"
+              maxlength="5000"
+              [placeholder]="'storefront.claims.create.placeholder' | t"
+              class="w-full rounded-2xl border border-slate-300/80 bg-slate-50/50 px-4 py-3 text-sm text-slate-700 focus:bg-white focus:border-indigo-500 focus:outline-none transition-all resize-none"
+            ></textarea>
+            <div class="mt-2 flex items-start justify-between gap-3">
+              <div class="min-h-5">
+                @if (fieldError()) {
+                  <p class="text-xs text-red-600">{{ fieldError() }}</p>
+                } @else {
+                  <p class="text-xs text-slate-400">{{ 'storefront.claims.create.eligibilityHint' | t }}</p>
+                }
+              </div>
+              <p class="text-xs text-slate-400 shrink-0">{{ issueDescription.trim().length }}/5000</p>
+            </div>
+
+            <div class="mt-5 flex flex-col sm:flex-row gap-3">
+              <button
+                type="button"
+                (click)="submitClaim()"
+                [disabled]="!canSubmit()"
+                class="btn-primary rounded-xl px-5 py-2.5 text-sm inline-flex justify-center disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              >
+                {{ submitting() ? ('storefront.claims.create.submitting' | t) : ('storefront.claims.create.submit' | t) }}
+              </button>
+              <a [routerLink]="['/account/orders', o.id]" class="btn-secondary rounded-xl px-5 py-2.5 text-sm inline-flex justify-center">
+                {{ 'common.cancel' | t }}
+              </a>
+            </div>
+          </div>
+        }
+      }
+    }
+  }
+</div>

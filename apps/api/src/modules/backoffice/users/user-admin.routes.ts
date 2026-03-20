@@ -11,3 +11,4 @@ userAdminRouter.post('/staff', userAdminController.createStaff);
 userAdminRouter.post('/admin', userAdminController.createAdmin);
 userAdminRouter.patch('/:userId', userAdminController.updateUser);
 userAdminRouter.post('/:userId/disable', userAdminController.disableUser);
+userAdminRouter.post('/:userId/enable', userAdminController.enableUser);

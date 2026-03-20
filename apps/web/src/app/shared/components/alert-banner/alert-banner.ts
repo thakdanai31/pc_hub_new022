@@ -1,4 +1,5 @@
 import { Component, computed, input, output, signal } from '@angular/core';
+import { TranslatePipe } from '../../pipes/translate.pipe';
 
 type AlertType = 'error' | 'warning' | 'success' | 'info';
 
@@ -31,6 +32,7 @@ const TYPE_STYLES: Record<AlertType, { container: string; icon: string; iconBg: 
 
 @Component({
   selector: 'app-alert-banner',
+  imports: [TranslatePipe],
   templateUrl: './alert-banner.html',
 })
 export class AlertBanner {

@@ -2,10 +2,12 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { Router, RouterOutlet, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { CartService } from '../../core/services/cart.service';
+import { LanguageSwitcher } from '../../shared/components/language-switcher/language-switcher';
+import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 
 @Component({
   selector: 'app-storefront-layout',
-  imports: [RouterOutlet, RouterLink],
+  imports: [RouterOutlet, RouterLink, LanguageSwitcher, TranslatePipe],
   templateUrl: './storefront-layout.html',
 })
 export class StorefrontLayout implements OnInit {

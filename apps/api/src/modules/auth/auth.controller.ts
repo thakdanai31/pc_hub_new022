@@ -1,6 +1,11 @@
 import type { Request, Response } from 'express';
 import * as authService from './auth.service.js';
-import { registerBodySchema, loginBodySchema } from './auth.schema.js';
+import {
+  registerBodySchema,
+  loginBodySchema,
+  forgotPasswordBodySchema,
+  resetPasswordBodySchema,
+} from './auth.schema.js';
 import { sendSuccess } from '../../common/response.js';
 import { setRefreshCookie, clearRefreshCookie, getRefreshCookieName } from '../../utils/cookie.js';
 import { getAuthUser } from '../../middleware/auth.js';
@@ -79,6 +84,27 @@ export async function logout(req: Request, res: Response): Promise<void> {
   clearRefreshCookie(res);
 
   sendSuccess({ res, message: 'Logged out successfully' });
+}
+
+export async function forgotPassword(req: Request, res: Response): Promise<void> {
+  const body = forgotPasswordBodySchema.parse(req.body);
+  const result = await authService.requestPasswordReset(body);
+
+  sendSuccess({
+    res,
+    message: 'If an account exists for that email, password reset instructions will be sent shortly.',
+    data: result,
+  });
+}
+
+export async function resetPassword(req: Request, res: Response): Promise<void> {
+  const body = resetPasswordBodySchema.parse(req.body);
+  await authService.resetPassword(body);
+
+  sendSuccess({
+    res,
+    message: 'Password reset successful',
+  });
 }
 
 export async function me(req: Request, res: Response): Promise<void> {

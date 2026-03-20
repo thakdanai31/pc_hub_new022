@@ -1,5 +1,12 @@
 import type { Response } from 'supertest';
 
+let testPhoneSequence = 0;
+
+export function getUniqueTestPhoneNumber(): string {
+  testPhoneSequence += 1;
+  return `09${String(testPhoneSequence).padStart(8, '0')}`;
+}
+
 export function extractCookie(res: Response, name: string): string | null {
   const cookies = res.headers['set-cookie'];
   if (!cookies) return null;
