@@ -5,7 +5,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://pc-hub-1c79.onrender.com/api/:path*"
+      "destination": "https://pc-hub-api.vercel.app/api/:path*"
     },
     {
       "source": "/(.*)",
