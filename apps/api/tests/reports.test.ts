@@ -164,20 +164,12 @@ async function createOrder(paymentMethod: 'COD' | 'PROMPTPAY_QR' = 'COD') {
 describe('Daily Sales Reports', () => {
   beforeEach(cleanOrders);
 
-  it('staff can get daily sales summary', async () => {
-    await createOrder();
-
+  it('staff gets 403 for daily sales summary', async () => {
     const res = await request(app)
       .get('/api/v1/backoffice/reports/daily-sales')
       .set('Authorization', `Bearer ${staffToken}`);
 
-    expect(res.status).toBe(200);
-    expect(res.body.data.totalOrders).toBe(1);
-    expect(typeof res.body.data.completedRevenue).toBe('number');
-    expect(typeof res.body.data.pendingRevenue).toBe('number');
-    expect(Array.isArray(res.body.data.ordersByStatus)).toBe(true);
-    expect(Array.isArray(res.body.data.ordersByPaymentMethod)).toBe(true);
-    expect(Array.isArray(res.body.data.items)).toBe(true);
+    expect(res.status).toBe(403);
   });
 
   it('admin can get daily sales summary', async () => {
@@ -211,7 +203,7 @@ describe('Daily Sales Reports', () => {
 
     const res = await request(app)
       .get('/api/v1/backoffice/reports/daily-sales')
-      .set('Authorization', `Bearer ${staffToken}`);
+      .set('Authorization', `Bearer ${adminToken}`);
 
     expect(res.status).toBe(200);
     expect(res.body.data.totalOrders).toBeGreaterThanOrEqual(1);
@@ -228,7 +220,7 @@ describe('Daily Sales Reports', () => {
 
     const res = await request(app)
       .get(`/api/v1/backoffice/reports/daily-sales?date=${today}`)
-      .set('Authorization', `Bearer ${staffToken}`);
+      .set('Authorization', `Bearer ${adminToken}`);
 
     expect(res.status).toBe(200);
     expect(res.body.data.date).toBe(today);
@@ -238,7 +230,7 @@ describe('Daily Sales Reports', () => {
   it('empty day returns zeros', async () => {
     const res = await request(app)
       .get('/api/v1/backoffice/reports/daily-sales?date=2020-01-01')
-      .set('Authorization', `Bearer ${staffToken}`);
+      .set('Authorization', `Bearer ${adminToken}`);
 
     expect(res.status).toBe(200);
     expect(res.body.data.totalOrders).toBe(0);
@@ -250,7 +242,7 @@ describe('Daily Sales Reports', () => {
   it('invalid date format returns 400', async () => {
     const res = await request(app)
       .get('/api/v1/backoffice/reports/daily-sales?date=not-a-date')
-      .set('Authorization', `Bearer ${staffToken}`);
+      .set('Authorization', `Bearer ${adminToken}`);
 
     expect(res.status).toBe(400);
   });
@@ -264,7 +256,7 @@ describe('Daily Sales Reports', () => {
 
     const res = await request(app)
       .get('/api/v1/backoffice/reports/daily-sales/excel')
-      .set('Authorization', `Bearer ${staffToken}`)
+      .set('Authorization', `Bearer ${adminToken}`)
       .responseType('blob');
 
     expect(res.status).toBe(200);
@@ -302,7 +294,7 @@ describe('Daily Sales Reports', () => {
 
     const res = await request(app)
       .get('/api/v1/backoffice/reports/daily-sales/pdf')
-      .set('Authorization', `Bearer ${staffToken}`)
+      .set('Authorization', `Bearer ${adminToken}`)
       .responseType('blob');
 
     expect(res.status).toBe(200);

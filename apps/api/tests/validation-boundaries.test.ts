@@ -318,39 +318,17 @@ describe('Product admin validation boundaries', () => {
 
 // --- Report date validation ---
 describe('Report date validation boundaries', () => {
-  let staffToken: string;
-
-  beforeAll(async () => {
-    // Create staff for report access
-    await request(app).post('/api/v1/auth/register').send({
-      firstName: 'Val',
-      lastName: 'Staff',
-      phoneNumber: '0811116666',
-      email: 'val-staff@test.com',
-      password: 'password123',
-    });
-    await prisma.user.update({
-      where: { email: 'val-staff@test.com' },
-      data: { role: 'STAFF' },
-    });
-    const login = await request(app).post('/api/v1/auth/login').send({
-      email: 'val-staff@test.com',
-      password: 'password123',
-    });
-    staffToken = getBodyString(login, 'data', 'accessToken');
-  });
-
   it('rejects invalid date format', async () => {
     const res = await request(app)
       .get('/api/v1/backoffice/reports/daily-sales?date=2026-13-45')
-      .set('Authorization', `Bearer ${staffToken}`);
+      .set('Authorization', `Bearer ${adminToken}`);
     expect(res.status).toBe(400);
   });
 
   it('rejects non-date string', async () => {
     const res = await request(app)
       .get('/api/v1/backoffice/reports/daily-sales?date=not-a-date')
-      .set('Authorization', `Bearer ${staffToken}`);
+      .set('Authorization', `Bearer ${adminToken}`);
     expect(res.status).toBe(400);
   });
 });

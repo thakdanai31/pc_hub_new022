@@ -2,7 +2,6 @@ import { Component, inject, signal, OnInit, computed } from '@angular/core';
 import { forkJoin } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 import { LanguageService } from '../../../core/services/language.service';
-import { BackofficeReportService, type DailySalesResult } from '../../../core/services/backoffice-report.service';
 import { BackofficeAnalyticsService, type AnalyticsSummary, type RevenueTrendPoint, type TopProduct, type LowStockProduct, type RecentOrder } from '../../../core/services/backoffice-analytics.service';
 import {
   BackofficeClaimService,
@@ -34,12 +33,10 @@ const STOCK_IN_TYPES = new Set<InventoryTransactionType>([
 export class DashboardPage implements OnInit {
   protected readonly auth = inject(AuthService);
   protected readonly language = inject(LanguageService);
-  private readonly reportService = inject(BackofficeReportService);
   private readonly analyticsService = inject(BackofficeAnalyticsService);
   private readonly claimService = inject(BackofficeClaimService);
   private readonly inventoryService = inject(BackofficeInventoryService);
 
-  protected readonly dailySales = signal<DailySalesResult | null>(null);
   protected readonly analyticsSummary = signal<AnalyticsSummary | null>(null);
   protected readonly revenueTrend = signal<RevenueTrendPoint[]>([]);
   protected readonly topProducts = signal<TopProduct[]>([]);
@@ -74,20 +71,7 @@ export class DashboardPage implements OnInit {
     const role = this.auth.user()?.role;
     this.loading.set(true);
 
-    if (role === 'STAFF') {
-      this.reportService.getDailySales().subscribe({
-        next: (res) => {
-          this.dailySales.set(res.data);
-          this.loading.set(false);
-        },
-        error: () => {
-          this.error.set(
-            this.language.translate('backoffice.dashboard.loadStaffError'),
-          );
-          this.loading.set(false);
-        },
-      });
-    } else if (role === 'ADMIN') {
+    if (role === 'ADMIN') {
       forkJoin({
         summary: this.analyticsService.getSummary(),
         trend: this.analyticsService.getRevenueTrend('30d'),

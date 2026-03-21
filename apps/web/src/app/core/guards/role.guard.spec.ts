@@ -4,10 +4,14 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { roleGuard } from './role.guard';
 import { AuthService } from '../services/auth.service';
+import { routes } from '../../app.routes';
 
 describe('roleGuard', () => {
   let router: Router;
   let authService: AuthService;
+  const dailySalesRoute = routes
+    .find((route) => route.path === 'backoffice')
+    ?.children?.find((route) => route.path === 'reports/daily-sales');
 
   beforeEach(async () => {
     TestBed.configureTestingModule({
@@ -61,5 +65,28 @@ describe('roleGuard', () => {
     const result = TestBed.runInInjectionContext(() => guard({} as never, {} as never));
 
     expect(result).toEqual(router.createUrlTree(['/login']));
+  });
+
+  it('uses an admin-only guard for the Daily Sales route', () => {
+    const guard = dailySalesRoute?.canActivate?.[0];
+    expect(guard).toBeDefined();
+
+    Object.defineProperty(authService, 'user', {
+      value: () => ({ id: 1, email: 'staff@test.com', firstName: 'S', lastName: 'T', role: 'STAFF' as const, isActive: true }),
+    });
+
+    const denied = TestBed.runInInjectionContext(() =>
+      (guard as ReturnType<typeof roleGuard>)({} as never, {} as never),
+    );
+    expect(denied).toEqual(router.createUrlTree(['/']));
+
+    Object.defineProperty(authService, 'user', {
+      value: () => ({ id: 2, email: 'admin@test.com', firstName: 'A', lastName: 'D', role: 'ADMIN' as const, isActive: true }),
+    });
+
+    const allowed = TestBed.runInInjectionContext(() =>
+      (guard as ReturnType<typeof roleGuard>)({} as never, {} as never),
+    );
+    expect(allowed).toBe(true);
   });
 });

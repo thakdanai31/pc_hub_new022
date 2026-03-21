@@ -25,7 +25,7 @@ describe('DashboardPage', () => {
     localStorage.clear();
   });
 
-  it('staff fetches daily sales and not analytics', () => {
+  it('staff does not fetch daily sales and still sees operational shortcuts without Daily Sales', () => {
     TestBed.configureTestingModule({
       imports: [DashboardPage],
       providers: [
@@ -40,16 +40,15 @@ describe('DashboardPage', () => {
     const fixture = TestBed.createComponent(DashboardPage);
     fixture.detectChanges();
 
-    // Staff should request daily sales
-    const salesReq = httpTesting.expectOne((r) => r.url.includes('/backoffice/reports/daily-sales'));
-    expect(salesReq.request.method).toBe('GET');
-    salesReq.flush({
-      success: true,
-      data: { date: '2026-03-15', totalOrders: 3, completedRevenue: 1000, pendingRevenue: 500, ordersByStatus: [], ordersByPaymentMethod: [], items: [] },
-    });
-
-    // Should NOT request analytics
+    httpTesting.expectNone((r) => r.url.includes('/backoffice/reports/daily-sales'));
     httpTesting.expectNone((r) => r.url.includes('/backoffice/analytics'));
+
+    fixture.detectChanges();
+
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.textContent).toContain('Manage Orders');
+    expect(el.textContent).toContain('Inventory');
+    expect(el.textContent).not.toContain('Daily Sales');
 
     httpTesting.verify();
   });

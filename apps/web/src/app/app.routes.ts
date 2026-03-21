@@ -148,6 +148,7 @@ export const routes: Routes = [
       },
       {
         path: 'reports/daily-sales',
+        canActivate: [roleGuard('ADMIN')],
         loadComponent: () =>
           import('./features/backoffice/reports/daily-sales').then(
             (m) => m.BoDailySalesPage,
