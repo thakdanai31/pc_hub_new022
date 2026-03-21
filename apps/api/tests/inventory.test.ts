@@ -32,6 +32,8 @@ let customerToken: string;
 let staffToken: string;
 let adminToken: string;
 let productId: number;
+let zeroStockProductId: number;
+let highStockProductId: number;
 let categoryId: number;
 let brandId: number;
 
@@ -141,6 +143,36 @@ beforeAll(async () => {
     },
   });
   productId = product.id;
+
+  const zeroStockProduct = await prisma.product.create({
+    data: {
+      categoryId,
+      brandId,
+      name: 'Lian Li LANCOOL 216',
+      slug: 'lian-li-lancool-216',
+      sku: 'CASE-LIANLI-216-ZERO',
+      description: 'Current inventory zero stock test case',
+      price: 3290,
+      stock: 0,
+      isActive: true,
+    },
+  });
+  zeroStockProductId = zeroStockProduct.id;
+
+  const highStockProduct = await prisma.product.create({
+    data: {
+      categoryId,
+      brandId,
+      name: 'Lian Li UNI FAN SL120 Triple Pack',
+      slug: 'lian-li-uni-fan-sl120-triple-pack',
+      sku: 'FAN-LIANLI-SL120-HIGH',
+      description: 'Current inventory high stock test case',
+      price: 3890,
+      stock: 25,
+      isActive: false,
+    },
+  });
+  highStockProductId = highStockProduct.id;
 });
 
 afterAll(async () => {
@@ -264,6 +296,62 @@ describe('Inventory management', () => {
     expect(data).toHaveLength(1);
     const row = data[0] as Record<string, unknown>;
     expect(row['type']).toBe('RESTOCK');
+  });
+
+  it('lists current inventory including products with zero stock and no transaction history', async () => {
+    const inventoryTxCount = await prisma.inventoryTransaction.count();
+    expect(inventoryTxCount).toBe(0);
+
+    const res = await request(app)
+      .get('/api/v1/backoffice/inventory/current')
+      .set('Authorization', `Bearer ${staffToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.pagination).toBeTruthy();
+
+    const data = getBodyArray(res, 'data') as Array<Record<string, unknown>>;
+    expect(data).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: productId,
+          stock: 10,
+          stockState: 'LOW_STOCK',
+        }),
+        expect.objectContaining({
+          id: zeroStockProductId,
+          stock: 0,
+          stockState: 'OUT_OF_STOCK',
+        }),
+        expect.objectContaining({
+          id: highStockProductId,
+          stock: 25,
+          stockState: 'IN_STOCK',
+          isActive: false,
+        }),
+      ]),
+    );
+  });
+
+  it('filters current inventory by stock state and search', async () => {
+    const res = await request(app)
+      .get('/api/v1/backoffice/inventory/current')
+      .query({
+        stockState: 'OUT_OF_STOCK',
+        search: '216-ZERO',
+      })
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+
+    const data = getBodyArray(res, 'data') as Array<Record<string, unknown>>;
+    expect(data).toHaveLength(1);
+    expect(data[0]).toEqual(
+      expect.objectContaining({
+        id: zeroStockProductId,
+        sku: 'CASE-LIANLI-216-ZERO',
+        stockState: 'OUT_OF_STOCK',
+      }),
+    );
   });
 
   it('lists product-specific inventory history', async () => {

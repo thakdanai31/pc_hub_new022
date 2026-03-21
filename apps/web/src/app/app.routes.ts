@@ -49,6 +49,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'inventory/current',
+        loadComponent: () =>
+          import('./features/backoffice/inventory/inventory-current').then(
+            (m) => m.BoCurrentInventoryPage,
+          ),
+      },
+      {
         path: 'inventory',
         loadComponent: () =>
           import('./features/backoffice/inventory/inventory-list').then(

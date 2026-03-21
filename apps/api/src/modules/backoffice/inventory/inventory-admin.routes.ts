@@ -6,6 +6,7 @@ export const inventoryAdminRouter = Router();
 
 inventoryAdminRouter.use(requireRole('STAFF', 'ADMIN'));
 
+inventoryAdminRouter.get('/current', inventoryAdminController.listCurrentInventory);
 inventoryAdminRouter.get('/', inventoryAdminController.listTransactions);
 inventoryAdminRouter.get(
   '/reconciliation',

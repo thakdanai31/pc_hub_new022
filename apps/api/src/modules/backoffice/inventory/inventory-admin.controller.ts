@@ -3,6 +3,7 @@ import { sendSuccess } from '../../../common/response.js';
 import { sendPaginatedSuccess } from '../../../common/pagination.js';
 import { getAuthUser } from '../../../middleware/auth.js';
 import {
+  currentInventoryListQuerySchema,
   inventoryReconciliationBackfillBodySchema,
   inventoryReconciliationReportQuerySchema,
   inventoryMutationBodySchema,
@@ -12,6 +13,18 @@ import {
 } from '../../inventory/inventory.schema.js';
 import * as inventoryService from '../../inventory/inventory.service.js';
 import * as inventoryReconciliationService from '../../inventory/inventory-reconciliation.service.js';
+
+export async function listCurrentInventory(req: Request, res: Response): Promise<void> {
+  const query = currentInventoryListQuerySchema.parse(req.query);
+  const result = await inventoryService.getCurrentInventoryOverview(query);
+
+  sendPaginatedSuccess({
+    res,
+    message: 'Current inventory overview retrieved',
+    data: result.data,
+    pagination: result.pagination,
+  });
+}
 
 export async function listTransactions(req: Request, res: Response): Promise<void> {
   const query = inventoryTransactionListQuerySchema.parse(req.query);

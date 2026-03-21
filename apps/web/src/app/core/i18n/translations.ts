@@ -534,6 +534,22 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     'backoffice.inventory.title': 'Inventory',
     'backoffice.inventory.subtitle': 'Review stock movement history across products',
     'backoffice.inventory.totalCount': '{count} total transactions',
+    'backoffice.inventory.currentNav': 'Current Inventory',
+    'backoffice.inventory.currentTitle': 'Current Inventory',
+    'backoffice.inventory.currentSubtitle':
+      'Review all products and their current stock levels.',
+    'backoffice.inventory.currentTotalCount': '{count} total products',
+    'backoffice.inventory.currentSearchPlaceholder':
+      'Search by product name or SKU',
+    'backoffice.inventory.stockState': 'Stock State',
+    'backoffice.inventory.allStockStates': 'All stock states',
+    'backoffice.inventory.currentEmptyTitle': 'No products found',
+    'backoffice.inventory.currentEmptyDescription':
+      'Try adjusting your search or stock-state filter.',
+    'backoffice.inventory.currentLoadError':
+      'Failed to load the current inventory overview.',
+    'backoffice.inventory.currentPaginationEntity': 'products',
+    'backoffice.inventory.viewProductInventory': 'View inventory detail',
     'backoffice.inventory.productId': 'Product ID',
     'backoffice.inventory.allProducts': 'All products',
     'backoffice.inventory.referenceId': 'Reference ID',
@@ -1121,6 +1137,22 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     'backoffice.inventory.title': 'คลังสินค้า',
     'backoffice.inventory.subtitle': 'ตรวจสอบประวัติการเคลื่อนไหวของสต็อกในแต่ละสินค้า',
     'backoffice.inventory.totalCount': 'มีรายการเคลื่อนไหวทั้งหมด {count} รายการ',
+    'backoffice.inventory.currentNav': 'สต็อกปัจจุบัน',
+    'backoffice.inventory.currentTitle': 'สต็อกปัจจุบัน',
+    'backoffice.inventory.currentSubtitle':
+      'ตรวจสอบสินค้าทั้งหมดและจำนวนสต็อกคงเหลือปัจจุบัน',
+    'backoffice.inventory.currentTotalCount': 'มีสินค้าทั้งหมด {count} รายการ',
+    'backoffice.inventory.currentSearchPlaceholder':
+      'ค้นหาด้วยชื่อสินค้าหรือ SKU',
+    'backoffice.inventory.stockState': 'สถานะสต็อก',
+    'backoffice.inventory.allStockStates': 'ทุกสถานะสต็อก',
+    'backoffice.inventory.currentEmptyTitle': 'ไม่พบสินค้าในคลัง',
+    'backoffice.inventory.currentEmptyDescription':
+      'ลองปรับคำค้นหาหรือสถานะสต็อกเพื่อดูรายการสินค้า',
+    'backoffice.inventory.currentLoadError':
+      'ไม่สามารถโหลดภาพรวมสต็อกปัจจุบันได้',
+    'backoffice.inventory.currentPaginationEntity': 'สินค้า',
+    'backoffice.inventory.viewProductInventory': 'ดูรายละเอียดคลังสินค้า',
     'backoffice.inventory.productId': 'รหัสสินค้า',
     'backoffice.inventory.allProducts': 'ทุกสินค้า',
     'backoffice.inventory.referenceId': 'รหัสอ้างอิง',

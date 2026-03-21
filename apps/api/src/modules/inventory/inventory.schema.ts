@@ -39,6 +39,21 @@ export const productIdParamSchema = z.object({
   productId: z.coerce.number().int().positive(),
 });
 
+export const inventoryStockStateSchema = z.enum([
+  'IN_STOCK',
+  'LOW_STOCK',
+  'OUT_OF_STOCK',
+]);
+
+export type InventoryStockStateValue = z.infer<typeof inventoryStockStateSchema>;
+
+export const currentInventoryListQuerySchema = paginationQuerySchema.extend({
+  search: z.string().trim().max(200).optional(),
+  stockState: inventoryStockStateSchema.optional(),
+});
+
+export type CurrentInventoryListQuery = z.infer<typeof currentInventoryListQuerySchema>;
+
 export const inventoryReconciliationOrderStatusSchema = z.enum([
   'PENDING',
   'AWAITING_PAYMENT',

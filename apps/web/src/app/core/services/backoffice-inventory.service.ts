@@ -12,6 +12,11 @@ export type InventoryTransactionType =
   | 'RETURN_IN'
   | 'RETURN_OUT';
 
+export type InventoryStockState =
+  | 'IN_STOCK'
+  | 'LOW_STOCK'
+  | 'OUT_OF_STOCK';
+
 export type InventoryReconciliationOrderStatus =
   | 'PENDING'
   | 'AWAITING_PAYMENT'
@@ -65,6 +70,33 @@ export interface InventoryTransactionRecord {
     slug: string;
     sku: string;
   };
+}
+
+export interface CurrentInventoryRecord {
+  id: number;
+  name: string;
+  slug: string;
+  sku: string;
+  stock: number;
+  stockState: InventoryStockState;
+  isActive: boolean;
+  category: {
+    id: number;
+    name: string;
+    slug: string;
+  };
+  brand: {
+    id: number;
+    name: string;
+    slug: string;
+  };
+}
+
+export interface CurrentInventoryListParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  stockState?: InventoryStockState;
 }
 
 export interface InventoryTransactionListParams {
@@ -179,6 +211,19 @@ export interface InventoryReconciliationBackfillPayload {
 export class BackofficeInventoryService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = environment.apiUrl;
+
+  listCurrentInventory(params: CurrentInventoryListParams = {}) {
+    const queryParams: Record<string, string> = {};
+    if (params.page) queryParams['page'] = String(params.page);
+    if (params.limit) queryParams['limit'] = String(params.limit);
+    if (params.search) queryParams['search'] = params.search;
+    if (params.stockState) queryParams['stockState'] = params.stockState;
+
+    return this.http.get<PaginatedApiResponse<CurrentInventoryRecord>>(
+      `${this.apiUrl}/backoffice/inventory/current`,
+      { params: queryParams },
+    );
+  }
 
   listTransactions(params: InventoryTransactionListParams = {}) {
     const queryParams: Record<string, string> = {};

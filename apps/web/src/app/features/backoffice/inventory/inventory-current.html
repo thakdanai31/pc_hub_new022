@@ -1,0 +1,290 @@
+<div>
+  <app-page-header
+    [title]="'backoffice.inventory.currentTitle' | t"
+    [subtitle]="'backoffice.inventory.currentSubtitle' | t"
+  >
+    <div actions>
+      <span class="text-xs font-medium text-slate-400">
+        @if (pagination(); as pg) {
+          {{ 'backoffice.inventory.currentTotalCount' | t:{count: pg.total} }}
+        }
+      </span>
+    </div>
+  </app-page-header>
+
+  <div class="bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-4 mb-6">
+    <div class="flex flex-col md:flex-row md:items-end gap-3">
+      <div class="flex-1">
+        <div class="relative">
+          <svg
+            class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+            />
+          </svg>
+          <input
+            id="current-inventory-search"
+            type="text"
+            [(ngModel)]="search"
+            (ngModelChange)="onFilterChange()"
+            [placeholder]="'backoffice.inventory.currentSearchPlaceholder' | t"
+            class="w-full rounded-xl border border-slate-200 pl-9 pr-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-colors"
+          />
+        </div>
+      </div>
+
+      <div class="w-full md:w-52">
+        <label
+          for="current-inventory-stock-state"
+          class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5"
+        >
+          {{ 'backoffice.inventory.stockState' | t }}
+        </label>
+        <select
+          id="current-inventory-stock-state"
+          [(ngModel)]="stockStateFilter"
+          (ngModelChange)="onFilterChange()"
+          class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-colors"
+        >
+          @for (option of stockStateOptions; track option.value) {
+            <option [ngValue]="option.value">{{ option.labelKey | t }}</option>
+          }
+        </select>
+      </div>
+
+      @if (hasActiveFilters()) {
+        <button
+          (click)="clearFilters()"
+          class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold text-slate-500 hover:text-red-600 rounded-xl hover:bg-red-50 transition-colors cursor-pointer"
+        >
+          <svg
+            class="w-3.5 h-3.5"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M6 18 18 6M6 6l12 12"
+            />
+          </svg>
+          {{ 'common.clear' | t }}
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 overflow-hidden">
+      <div class="divide-y divide-slate-100">
+        @for (_ of [1, 2, 3, 4, 5]; track $index) {
+          <div class="px-5 py-4 flex items-center gap-4 stagger-children">
+            <div class="w-12 h-12 bg-slate-200 rounded-xl shimmer shrink-0"></div>
+            <div class="flex-1 space-y-2">
+              <div class="h-3.5 w-40 bg-slate-200 rounded-full shimmer"></div>
+              <div class="h-3 w-28 bg-slate-200 rounded-full shimmer"></div>
+            </div>
+            <div class="h-5 w-16 bg-slate-200 rounded-full shimmer"></div>
+            <div class="h-5 w-20 bg-slate-200 rounded-full shimmer"></div>
+          </div>
+        }
+      </div>
+    </div>
+  } @else if (error()) {
+    <app-alert-banner type="error" [message]="error()">
+      <button
+        (click)="onFilterChange()"
+        class="mt-2 inline-flex items-center px-3.5 py-1.5 bg-red-600 text-white rounded-lg text-xs font-semibold hover:bg-red-500 cursor-pointer"
+      >
+        {{ 'common.retry' | t }}
+      </button>
+    </app-alert-banner>
+  } @else if (products().length === 0) {
+    <app-empty-state
+      [title]="'backoffice.inventory.currentEmptyTitle' | t"
+      [description]="'backoffice.inventory.currentEmptyDescription' | t"
+    >
+      <ng-container icon>
+        <svg
+          class="w-10 h-10 text-slate-400"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z"
+          />
+        </svg>
+      </ng-container>
+    </app-empty-state>
+  } @else {
+    <div class="hidden md:block bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 overflow-hidden">
+      <table class="min-w-full divide-y divide-slate-100">
+        <thead>
+          <tr class="bg-slate-50/80">
+            <th class="px-5 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              {{ 'common.product' | t }}
+            </th>
+            <th class="px-5 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              {{ 'common.sku' | t }}
+            </th>
+            <th class="px-5 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              {{ 'backoffice.inventory.category' | t }}
+            </th>
+            <th class="px-5 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              {{ 'backoffice.inventory.brand' | t }}
+            </th>
+            <th class="px-5 py-3.5 text-right text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              {{ 'backoffice.inventory.currentStock' | t }}
+            </th>
+            <th class="px-5 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              {{ 'backoffice.inventory.stockState' | t }}
+            </th>
+            <th class="px-5 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              {{ 'common.status' | t }}
+            </th>
+            <th class="px-5 py-3.5 w-16"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100/80">
+          @for (product of products(); track product.id) {
+            <tr
+              class="hover:bg-indigo-50/30 cursor-pointer transition-colors group"
+              [routerLink]="['/backoffice/inventory/products', product.id]"
+            >
+              <td class="px-5 py-3.5">
+                <p class="text-sm font-semibold text-slate-800 line-clamp-1">
+                  {{ product.name }}
+                </p>
+              </td>
+              <td class="px-5 py-3.5">
+                <span class="text-xs text-slate-500 font-mono bg-slate-50 px-2 py-0.5 rounded-md">
+                  {{ product.sku }}
+                </span>
+              </td>
+              <td class="px-5 py-3.5">
+                <span class="text-sm text-slate-600">{{ product.category.name }}</span>
+              </td>
+              <td class="px-5 py-3.5">
+                <span class="text-sm text-slate-600">{{ product.brand.name }}</span>
+              </td>
+              <td class="px-5 py-3.5 text-right">
+                <span class="text-sm font-bold text-slate-900">{{ product.stock }}</span>
+              </td>
+              <td class="px-5 py-3.5">
+                <span
+                  class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold"
+                  [class]="stockStateClass(product.stockState)"
+                >
+                  {{ stockStateLabel(product.stockState) }}
+                </span>
+              </td>
+              <td class="px-5 py-3.5">
+                <app-status-badge [status]="activeStatus(product)" />
+              </td>
+              <td class="px-5 py-3.5 text-right">
+                <span class="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 group-hover:text-indigo-700">
+                  {{ 'backoffice.inventory.viewProductInventory' | t }}
+                  <svg
+                    class="w-3.5 h-3.5"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="m8.25 4.5 7.5 7.5-7.5 7.5"
+                    />
+                  </svg>
+                </span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="md:hidden space-y-3">
+      @for (product of products(); track product.id) {
+        <a
+          [routerLink]="['/backoffice/inventory/products', product.id]"
+          class="block bg-white rounded-2xl shadow-md shadow-slate-200/30 border border-slate-200/60 p-4 hover:shadow-lg hover:border-indigo-200 transition-all"
+        >
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-bold text-slate-900 truncate">{{ product.name }}</p>
+              <p class="text-[10px] text-slate-400 mt-0.5">{{ product.sku }}</p>
+            </div>
+            <app-status-badge [status]="activeStatus(product)" />
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 mt-4 text-xs">
+            <div>
+              <p class="font-bold uppercase tracking-widest text-[10px] text-slate-400">
+                {{ 'backoffice.inventory.category' | t }}
+              </p>
+              <p class="mt-1 text-slate-700">{{ product.category.name }}</p>
+            </div>
+            <div>
+              <p class="font-bold uppercase tracking-widest text-[10px] text-slate-400">
+                {{ 'backoffice.inventory.brand' | t }}
+              </p>
+              <p class="mt-1 text-slate-700">{{ product.brand.name }}</p>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between gap-3 mt-4">
+            <div>
+              <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                {{ 'backoffice.inventory.currentStock' | t }}
+              </p>
+              <p class="mt-1 text-lg font-bold text-slate-900">{{ product.stock }}</p>
+            </div>
+            <span
+              class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold"
+              [class]="stockStateClass(product.stockState)"
+            >
+              {{ stockStateLabel(product.stockState) }}
+            </span>
+          </div>
+
+          <div class="mt-4 text-xs font-semibold text-indigo-600">
+            {{ 'backoffice.inventory.viewProductInventory' | t }}
+          </div>
+        </a>
+      }
+    </div>
+
+    @if (pagination(); as pg) {
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-3 mt-6">
+        <p class="text-xs font-medium text-slate-400">
+          {{ 'common.paginationSummary' | t:{
+            page: pg.page,
+            totalPages: pg.totalPages,
+            total: pg.total,
+            entity: ('backoffice.inventory.currentPaginationEntity' | t)
+          } }}
+        </p>
+        <app-pagination
+          [page]="pg.page"
+          [totalPages]="pg.totalPages"
+          (pageChange)="goToPage($event)"
+        />
+      </div>
+    }
+  }
+</div>

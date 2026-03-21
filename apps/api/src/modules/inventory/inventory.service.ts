@@ -8,6 +8,7 @@ import type {
 } from "../../generated/prisma/client.js";
 import type {
   InventoryMutationBody,
+  CurrentInventoryListQuery,
   InventoryTransactionListQuery,
   ProductInventoryTransactionListQuery,
 } from "./inventory.schema.js";
@@ -29,6 +30,8 @@ const DECREMENT_TYPES = new Set<InventoryTransactionType>([
   "ADJUSTMENT_OUT",
   "RETURN_OUT",
 ]);
+
+const LOW_STOCK_THRESHOLD = 10;
 
 const productSummarySelect = {
   id: true,
@@ -55,6 +58,31 @@ const transactionSelect = {
     },
   },
 } satisfies Prisma.InventoryTransactionSelect;
+
+const currentInventorySelect = {
+  id: true,
+  name: true,
+  slug: true,
+  sku: true,
+  stock: true,
+  isActive: true,
+  category: {
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+    },
+  },
+  brand: {
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+    },
+  },
+} satisfies Prisma.ProductSelect;
+
+type InventoryStockState = "IN_STOCK" | "LOW_STOCK" | "OUT_OF_STOCK";
 
 interface InventoryChangeInput {
   productId: number;
@@ -125,6 +153,46 @@ function buildListWhere(
     ...(query.type !== undefined && { type: query.type }),
     ...(query.referenceId !== undefined && { referenceId: query.referenceId }),
   };
+}
+
+function getInventoryStockState(stock: number): InventoryStockState {
+  if (stock <= 0) {
+    return "OUT_OF_STOCK";
+  }
+
+  if (stock <= LOW_STOCK_THRESHOLD) {
+    return "LOW_STOCK";
+  }
+
+  return "IN_STOCK";
+}
+
+function buildCurrentInventoryWhere(
+  query: CurrentInventoryListQuery,
+): Prisma.ProductWhereInput {
+  const where: Prisma.ProductWhereInput = {};
+
+  if (query.search) {
+    where.OR = [
+      { name: { contains: query.search } },
+      { sku: { contains: query.search } },
+    ];
+  }
+
+  if (query.stockState === "OUT_OF_STOCK") {
+    where.stock = 0;
+  } else if (query.stockState === "LOW_STOCK") {
+    where.stock = {
+      gt: 0,
+      lte: LOW_STOCK_THRESHOLD,
+    };
+  } else if (query.stockState === "IN_STOCK") {
+    where.stock = {
+      gt: LOW_STOCK_THRESHOLD,
+    };
+  }
+
+  return where;
 }
 
 async function ensureProductExists(productId: number): Promise<void> {
@@ -561,6 +629,34 @@ export async function getInventoryTransactionsByProduct(
 
   return {
     data: rows,
+    pagination: buildPaginationMeta(query.page, query.limit, total),
+  };
+}
+
+export async function getCurrentInventoryOverview(
+  query: CurrentInventoryListQuery,
+) {
+  const where = buildCurrentInventoryWhere(query);
+
+  const [rows, total] = await Promise.all([
+    prisma.product.findMany({
+      where,
+      select: currentInventorySelect,
+      orderBy: [
+        { stock: "asc" },
+        { name: "asc" },
+      ],
+      skip: (query.page - 1) * query.limit,
+      take: query.limit,
+    }),
+    prisma.product.count({ where }),
+  ]);
+
+  return {
+    data: rows.map((row) => ({
+      ...row,
+      stockState: getInventoryStockState(row.stock),
+    })),
     pagination: buildPaginationMeta(query.page, query.limit, total),
   };
 }
