@@ -86,3 +86,18 @@ export async function deleteImage(req: Request, res: Response): Promise<void> {
 
   sendSuccess({ res, message: 'Image deleted' });
 }
+
+export async function setPrimaryImage(req: Request, res: Response): Promise<void> {
+  const { productId, imageId } = imageIdParamSchema.parse(req.params);
+  const images = await productAdminService.setPrimaryProductImage(
+    productId,
+    imageId,
+    getAuthUser(req).userId,
+  );
+
+  sendSuccess({
+    res,
+    message: 'Primary image updated',
+    data: { images },
+  });
+}

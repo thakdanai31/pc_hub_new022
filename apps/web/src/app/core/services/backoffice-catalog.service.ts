@@ -141,6 +141,15 @@ export class BackofficeCatalogService {
     );
   }
 
+  setPrimaryProductImage(productId: number, imageId: number) {
+    return this.http.post<
+      ApiResponse<{ images: AdminProductDetail['images'] }>
+    >(
+      `${this.apiUrl}/backoffice/products/${productId}/images/${imageId}/set-primary`,
+      {},
+    );
+  }
+
   // --- Categories ---
   listCategories(params: { page?: number; limit?: number; search?: string } = {}) {
     const q: Record<string, string> = {};

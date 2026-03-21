@@ -199,6 +199,14 @@
                       <img [src]="img.imageUrl" [alt]="img.altText || ''" class="w-full h-28 object-cover" />
                       @if ($first) {
                         <span class="absolute top-1.5 left-1.5 px-1.5 py-0.5 text-[9px] font-bold bg-indigo-600 text-white rounded-md shadow-sm">Primary</span>
+                      } @else {
+                        <button
+                          type="button"
+                          (click)="setExistingPrimaryImage(img.id)"
+                          class="absolute bottom-1.5 left-1.5 rounded-md bg-black/60 px-2 py-1 text-[9px] font-semibold text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/75"
+                        >
+                          Set as primary
+                        </button>
                       }
                       <button
                         type="button"

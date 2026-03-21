@@ -202,6 +202,21 @@ export class BoProductFormPage implements OnInit {
     });
   }
 
+  setExistingPrimaryImage(imageId: number) {
+    const currentProduct = this.product();
+    if (!currentProduct) return;
+
+    this.catalogService.setPrimaryProductImage(currentProduct.id, imageId).subscribe({
+      next: () => {
+        this.loadProduct(currentProduct.id);
+      },
+      error: (err) => {
+        const errBody = extractErrorBody(err.error);
+        this.errorMsg.set(errBody.message ?? 'Failed to update primary image');
+      },
+    });
+  }
+
   private loadProduct(id: number) {
     this.catalogService.getProduct(id).subscribe({
       next: (res) => {

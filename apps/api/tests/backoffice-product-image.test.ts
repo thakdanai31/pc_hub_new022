@@ -44,6 +44,7 @@ let staffToken: string;
 let categoryId: number;
 let brandId: number;
 let productId: number;
+let productCounter = 0;
 
 async function cleanAll() {
   await prisma.productImage.deleteMany();
@@ -83,6 +84,26 @@ async function registerAndGetToken(
   const token: unknown = loginRes.body?.data?.accessToken;
   if (typeof token !== 'string') throw new Error('Failed to get token');
   return token;
+}
+
+async function createImageTestProduct(nameSuffix: string): Promise<number> {
+  productCounter++;
+
+  const prodRes = await request(app)
+    .post('/api/v1/backoffice/products')
+    .set('Authorization', `Bearer ${adminToken}`)
+    .send({
+      categoryId,
+      brandId,
+      name: `RTX 4090 ${nameSuffix} ${productCounter}`,
+      slug: `rtx-4090-${nameSuffix.toLowerCase().replace(/\s+/g, '-')}-${productCounter}`,
+      sku: `NV-4090-${nameSuffix.toUpperCase().replace(/\s+/g, '-')}-${productCounter}`,
+      description: 'GPU for image tests',
+      price: 59990,
+      stock: 5,
+    });
+
+  return prodRes.body.data.id;
 }
 
 beforeAll(async () => {
@@ -252,6 +273,107 @@ describe('DELETE /api/v1/backoffice/products/:productId/images/:imageId', () => 
   it('staff cannot delete image (403)', async () => {
     const res = await request(app)
       .delete(`/api/v1/backoffice/products/${productId}/images/1`)
+      .set('Authorization', `Bearer ${staffToken}`);
+
+    expect(res.status).toBe(403);
+  });
+});
+
+describe('POST /api/v1/backoffice/products/:productId/images/:imageId/set-primary', () => {
+  it('moves the selected image to the first sortOrder and keeps the rest ordered behind it', async () => {
+    const localProductId = await createImageTestProduct('Primary reorder');
+
+    const firstUpload = await request(app)
+      .post(`/api/v1/backoffice/products/${localProductId}/images`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .attach('image', createTestJpeg(), 'primary-a.jpg')
+      .field('sortOrder', '0');
+
+    const secondUpload = await request(app)
+      .post(`/api/v1/backoffice/products/${localProductId}/images`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .attach('image', createTestJpeg(), 'primary-b.jpg')
+      .field('sortOrder', '1');
+
+    const thirdUpload = await request(app)
+      .post(`/api/v1/backoffice/products/${localProductId}/images`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .attach('image', createTestJpeg(), 'primary-c.jpg')
+      .field('sortOrder', '2');
+
+    const selectedImageId: number = secondUpload.body.data.id;
+    const selectedImageUrl: string = secondUpload.body.data.imageUrl;
+
+    const reorderRes = await request(app)
+      .post(`/api/v1/backoffice/products/${localProductId}/images/${selectedImageId}/set-primary`)
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(reorderRes.status).toBe(200);
+    expect(reorderRes.body.data.images).toHaveLength(3);
+    expect(reorderRes.body.data.images[0].id).toBe(selectedImageId);
+    expect(reorderRes.body.data.images[0].sortOrder).toBe(0);
+    expect(reorderRes.body.data.images[1].id).toBe(firstUpload.body.data.id);
+    expect(reorderRes.body.data.images[1].sortOrder).toBe(1);
+    expect(reorderRes.body.data.images[2].id).toBe(thirdUpload.body.data.id);
+    expect(reorderRes.body.data.images[2].sortOrder).toBe(2);
+
+    const backofficeProductRes = await request(app)
+      .get(`/api/v1/backoffice/products/${localProductId}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(backofficeProductRes.status).toBe(200);
+    expect(backofficeProductRes.body.data.images[0].id).toBe(selectedImageId);
+
+    const storefrontProductListRes = await request(app).get('/api/v1/products');
+    const storefrontProduct = storefrontProductListRes.body.data.find(
+      (product: Record<string, unknown>) => product['id'] === localProductId,
+    );
+
+    expect(storefrontProduct).toBeDefined();
+    expect(storefrontProduct.image).toBe(selectedImageUrl);
+  });
+
+  it('appends new uploads behind existing images when sortOrder is omitted', async () => {
+    const localProductId = await createImageTestProduct('Append upload');
+
+    const firstUpload = await request(app)
+      .post(`/api/v1/backoffice/products/${localProductId}/images`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .attach('image', createTestJpeg(), 'append-a.jpg');
+
+    const secondUpload = await request(app)
+      .post(`/api/v1/backoffice/products/${localProductId}/images`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .attach('image', createTestJpeg(), 'append-b.jpg');
+
+    expect(firstUpload.status).toBe(201);
+    expect(secondUpload.status).toBe(201);
+    expect(firstUpload.body.data.sortOrder).toBe(0);
+    expect(secondUpload.body.data.sortOrder).toBe(1);
+  });
+
+  it('returns 404 for a nonexistent image', async () => {
+    const localProductId = await createImageTestProduct('Missing image');
+
+    const res = await request(app)
+      .post(`/api/v1/backoffice/products/${localProductId}/images/99999/set-primary`)
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(404);
+  });
+
+  it('staff cannot set a primary image (403)', async () => {
+    const localProductId = await createImageTestProduct('Staff denied');
+
+    const uploadRes = await request(app)
+      .post(`/api/v1/backoffice/products/${localProductId}/images`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .attach('image', createTestJpeg(), 'staff-denied.jpg');
+
+    const imageId: number = uploadRes.body.data.id;
+
+    const res = await request(app)
+      .post(`/api/v1/backoffice/products/${localProductId}/images/${imageId}/set-primary`)
       .set('Authorization', `Bearer ${staffToken}`);
 
     expect(res.status).toBe(403);

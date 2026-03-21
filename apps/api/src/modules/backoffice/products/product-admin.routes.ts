@@ -48,6 +48,12 @@ productAdminRouter.post(
   productAdminController.uploadImage,
 );
 
+productAdminRouter.post(
+  '/:productId/images/:imageId/set-primary',
+  requireRole('ADMIN'),
+  productAdminController.setPrimaryImage,
+);
+
 productAdminRouter.delete(
   '/:productId/images/:imageId',
   requireRole('ADMIN'),

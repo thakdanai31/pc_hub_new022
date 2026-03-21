@@ -66,7 +66,7 @@ export type UpdateProductBody = z.infer<typeof updateProductBodySchema>;
 
 export const imageUploadBodySchema = z.object({
   altText: z.string().max(255).optional(),
-  sortOrder: z.coerce.number().int().min(0).default(0),
+  sortOrder: z.coerce.number().int().min(0).optional(),
 });
 
 export type ImageUploadBody = z.infer<typeof imageUploadBodySchema>;

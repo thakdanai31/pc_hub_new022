@@ -332,13 +332,19 @@ export async function uploadProductImage(
   );
 
   return await prisma.$transaction(async (tx) => {
+    const maxSortOrderRow = await tx.productImage.aggregate({
+      where: { productId },
+      _max: { sortOrder: true },
+    });
+    const nextSortOrder = (maxSortOrderRow._max.sortOrder ?? -1) + 1;
+
     const productImage = await tx.productImage.create({
       data: {
         productId,
         imageUrl,
         imagePublicId,
         altText: body.altText,
-        sortOrder: body.sortOrder,
+        sortOrder: body.sortOrder ?? nextSortOrder,
       },
       select: {
         id: true,
@@ -358,6 +364,64 @@ export async function uploadProductImage(
     });
 
     return productImage;
+  });
+}
+
+export async function setPrimaryProductImage(
+  productId: number,
+  imageId: number,
+  actorUserId: number,
+) {
+  const image = await prisma.productImage.findFirst({
+    where: { id: imageId, productId },
+    select: { id: true },
+  });
+  if (!image) {
+    throw new NotFoundError('Image not found');
+  }
+
+  return await prisma.$transaction(async (tx) => {
+    const currentImages = await tx.productImage.findMany({
+      where: { productId },
+      select: {
+        id: true,
+        imageUrl: true,
+        imagePublicId: true,
+        altText: true,
+        sortOrder: true,
+      },
+      orderBy: [
+        { sortOrder: 'asc' },
+        { id: 'asc' },
+      ],
+    });
+
+    const orderedImages = [
+      ...currentImages.filter((currentImage) => currentImage.id === imageId),
+      ...currentImages.filter((currentImage) => currentImage.id !== imageId),
+    ];
+
+    for (const [index, currentImage] of orderedImages.entries()) {
+      await tx.productImage.update({
+        where: { id: currentImage.id },
+        data: { sortOrder: index },
+      });
+    }
+
+    const updatedImages = orderedImages.map((currentImage, index) => ({
+      ...currentImage,
+      sortOrder: index,
+    }));
+
+    await logAction(tx, {
+      actorUserId,
+      action: 'PRODUCT_IMAGE_SET_PRIMARY',
+      entityType: 'ProductImage',
+      entityId: imageId,
+      metadata: { productId },
+    });
+
+    return updatedImages;
   });
 }
 
