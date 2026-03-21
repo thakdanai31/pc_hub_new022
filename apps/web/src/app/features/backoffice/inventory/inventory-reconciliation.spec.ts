@@ -110,11 +110,12 @@ describe('BoInventoryReconciliationPage', () => {
 
     flushReport(httpTesting, []);
 
-    fixture.componentInstance['orderIdFilter'] = '501';
+    fixture.componentInstance['orderIdFilter'] = 501 as never;
     fixture.componentInstance['statusFilter'] = 'CANCELLED';
     fixture.componentInstance['dateFrom'] = '2026-03-01';
     fixture.componentInstance['dateTo'] = '2026-03-19';
-    fixture.componentInstance['onFilterChange']();
+
+    expect(() => fixture.componentInstance['onFilterChange']()).not.toThrow();
 
     const filteredReq = httpTesting.expectOne(
       (r) =>

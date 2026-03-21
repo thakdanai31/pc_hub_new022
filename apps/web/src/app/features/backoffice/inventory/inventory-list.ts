@@ -32,9 +32,16 @@ const STOCK_IN_TYPES = new Set<InventoryTransactionType>([
   'RETURN_IN',
 ]);
 
-function parsePositiveInteger(value: string): number | undefined {
-  if (!value.trim()) return undefined;
-  const parsed = Number(value);
+function normalizeText(value: string | number | null | undefined): string | undefined {
+  const normalized = String(value ?? '').trim();
+  return normalized ? normalized : undefined;
+}
+
+function parsePositiveInteger(value: string | number | null | undefined): number | undefined {
+  const normalized = normalizeText(value);
+  if (!normalized) return undefined;
+
+  const parsed = Number(normalized);
   return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
 }
 
@@ -83,7 +90,11 @@ export class BoInventoryListPage implements OnInit {
   }
 
   protected hasActiveFilters(): boolean {
-    return !!(this.typeFilter || this.productIdFilter || this.referenceIdFilter);
+    return !!(
+      this.typeFilter ||
+      normalizeText(this.productIdFilter) ||
+      normalizeText(this.referenceIdFilter)
+    );
   }
 
   protected clearFilters() {

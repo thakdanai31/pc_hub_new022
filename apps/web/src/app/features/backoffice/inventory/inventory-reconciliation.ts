@@ -59,9 +59,16 @@ const RESULT_STATUS_LABELS: Record<InventoryReconciliationResultStatus, string> 
   failed: 'Failed',
 };
 
-function parsePositiveInteger(value: string): number | undefined {
-  if (!value.trim()) return undefined;
-  const parsed = Number(value);
+function normalizeText(value: string | number | null | undefined): string | undefined {
+  const normalized = String(value ?? '').trim();
+  return normalized ? normalized : undefined;
+}
+
+function parsePositiveInteger(value: string | number | null | undefined): number | undefined {
+  const normalized = normalizeText(value);
+  if (!normalized) return undefined;
+
+  const parsed = Number(normalized);
   return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
 }
 
@@ -138,7 +145,7 @@ export class BoInventoryReconciliationPage implements OnInit {
 
   protected hasActiveFilters(): boolean {
     return !!(
-      this.orderIdFilter ||
+      normalizeText(this.orderIdFilter) ||
       this.statusFilter ||
       this.dateFrom ||
       this.dateTo

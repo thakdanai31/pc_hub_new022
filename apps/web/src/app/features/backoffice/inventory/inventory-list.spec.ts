@@ -77,14 +77,17 @@ describe('BoInventoryListPage', () => {
       pagination: { page: 1, limit: 20, total: 0, totalPages: 0 },
     });
 
-    fixture.componentInstance['productIdFilter'] = '44';
-    fixture.componentInstance['onTypeTab']('RESTOCK');
+    fixture.componentInstance['productIdFilter'] = 44 as never;
+    fixture.componentInstance['referenceIdFilter'] = 9001 as never;
+
+    expect(() => fixture.componentInstance['onTypeTab']('RESTOCK')).not.toThrow();
 
     const filteredReq = httpTesting.expectOne(
       (r) =>
         r.url.includes('/backoffice/inventory') &&
         r.method === 'GET' &&
         r.params.get('productId') === '44' &&
+        r.params.get('referenceId') === '9001' &&
         r.params.get('type') === 'RESTOCK',
     );
     filteredReq.flush({
