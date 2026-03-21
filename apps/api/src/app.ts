@@ -1,5 +1,5 @@
 import express from "express";
-import helmet from "helmet";
+// import helmet from "helmet";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { env } from "./config/env.js";
@@ -22,7 +22,7 @@ import { claimRouter } from "./modules/claims/claim.routes.js";
 const app = express();
 
 // Security headers
-app.use(helmet());
+// app.use(helmet());
 
 // CORS
 app.use(
